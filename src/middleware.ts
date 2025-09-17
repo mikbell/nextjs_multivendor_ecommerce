@@ -1,5 +1,6 @@
 import { clerkMiddleware } from '@clerk/nextjs/server';
 
+// Middleware base di Clerk: non forza la protezione, evita conflitti con ngrok durante i test
 export default clerkMiddleware();
 
 export const config = {
