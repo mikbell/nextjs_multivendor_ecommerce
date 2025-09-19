@@ -1,10 +1,9 @@
 import { Webhook } from "svix";
-import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
-import { User, Role } from "@/generated/prisma";
+import { WebhookEvent } from "@clerk/nextjs/server";
+import { Role } from "@/generated/prisma";
 import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
-	// You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
 	const CLERK_WEBHOOK_SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
 	if (!CLERK_WEBHOOK_SIGNING_SECRET) {
@@ -13,29 +12,22 @@ export async function POST(req: Request) {
 		);
 	}
 
-	// Get the headers from the incoming Request
 	const headerPayload = req.headers;
 	const svix_id = headerPayload.get("svix-id");
 	const svix_timestamp = headerPayload.get("svix-timestamp");
 	const svix_signature = headerPayload.get("svix-signature");
 
-	// If there are no headers, error out
 	if (!svix_id || !svix_timestamp || !svix_signature) {
 		return new Response("Error occured -- no svix headers", {
 			status: 400,
 		});
 	}
 
-	// Get the body
 	const payload = await req.json();
 	const body = JSON.stringify(payload);
-
-	// Create a new Svix instance with your secret.
 	const wh = new Webhook(CLERK_WEBHOOK_SIGNING_SECRET);
-
 	let evt: WebhookEvent;
 
-	// Verify the payload with the headers
 	try {
 		evt = wh.verify(body, {
 			"svix-id": svix_id,
@@ -49,66 +41,61 @@ export async function POST(req: Request) {
 		});
 	}
 
-	// When user is created or updated
+	// Quando un utente è creato o aggiornato
 	if (evt.type === "user.created" || evt.type === "user.updated") {
-		// Parse the incoming event data
-		const data = JSON.parse(body).data;
+		const {
+			id,
+			email_addresses,
+			first_name,
+			last_name,
+			image_url,
+			private_metadata,
+		} = evt.data;
 
-		// Create a user object with relevant properties aligned to Prisma schema
-		const user: Partial<User> = {
-			id: data.id,
-			firstName: data.first_name ?? "",
-			lastName: data.last_name ?? "",
-			email: data.email_addresses?.[0]?.email_address,
-			picture: data.image_url,
-		};
+		// 1. Leggi il ruolo dai privateMetadata, con un fallback a USER
+		const role = (private_metadata?.role as Role) || Role.USER;
 
-		// If user data is invalid, exit the function
-		if (!user.email) {
+		const email = email_addresses?.[0]?.email_address;
+
+		if (!email) {
 			return new Response("Missing user email in webhook payload", {
 				status: 400,
 			});
 		}
 
-		// Upsert user in the database (update if exists, create if not)
-		const dbUser = await db.user.upsert({
-			where: { email: user.email },
+		// 2. Esegui l'upsert includendo il ruolo sia in 'create' che in 'update'
+		await db.user.upsert({
+			where: { email: email },
 			update: {
-				firstName: user.firstName!,
-				lastName: user.lastName!,
-				picture: user.picture!,
+				firstName: first_name ?? "",
+				lastName: last_name ?? "",
+				picture: image_url,
+				// Aggiungi il ruolo qui!
+				role: role,
 			},
 			create: {
-				id: user.id!,
-				firstName: user.firstName!,
-				lastName: user.lastName!,
-				email: user.email!,
-				picture: user.picture!,
-				role: Role.USER,
-			},
-		});
-
-		// Update user's metadata in Clerk with the role information
-		const client = await clerkClient();
-		await client.users.updateUserMetadata(data.id, {
-			privateMetadata: {
-				role: dbUser.role || Role.USER,
+				id: id,
+				firstName: first_name ?? "",
+				lastName: last_name ?? "",
+				email: email,
+				picture: image_url,
+				// Usa il ruolo letto da Clerk
+				role: role,
 			},
 		});
 	}
 
-	// When user is deleted
+	// Quando un utente è eliminato (questo blocco era già corretto)
 	if (evt.type === "user.deleted") {
-		// Parse the incoming event data to get the user ID
-		const userId = JSON.parse(body).data.id;
-
-		// Delete the user from the database based on the user ID
-		await db.user.delete({
-			where: {
-				id: userId,
-			},
-		});
+		const { id } = evt.data;
+		if (id) {
+			await db.user.delete({
+				where: { id: id },
+			});
+		}
 	}
+
+	// 3. La chiamata a updateUserMetadata è stata rimossa perché ridondante.
 
 	return new Response("", { status: 200 });
 }

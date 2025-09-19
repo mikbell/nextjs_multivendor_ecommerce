@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import clsx from "clsx";
 import { useTheme } from "next-themes";
@@ -13,7 +14,19 @@ export function Logo({
 	size?: Size;
 	className?: string;
 }) {
+	// 1. Aggiungi uno stato per tracciare se il componente è montato sul client
+	const [isMounted, setIsMounted] = useState(false);
 	const { theme, resolvedTheme } = useTheme();
+
+	// 2. Usa useEffect per cambiare lo stato solo dopo il primo render sul client
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+
+	// 3. Se non siamo ancora montati, non renderizzare nulla per evitare il mismatch
+	if (!isMounted) {
+		return null;
+	}
 
 	// Dimensioni
 	const sizeClasses: Record<Size, string> = {
@@ -50,6 +63,7 @@ export function Logo({
 				viewBox="0 0 182 42"
 				className={clsx(sizeClasses[size], className)}>
 				<title>Logo</title>
+				{/* Il resto del tuo SVG non cambia */}
 				<g id="logogram" transform="translate(0, 1) rotate(0)">
 					<path
 						d="M28.7089 33.1053L1.9434 14.6424C-0.768963 12.7715 0.15306 8.87601 3.53531 7.95996L31.9823 0.239132C32.5849 0.0216955 33.2306 -0.0488885 33.866 0.0332432C34.5013 0.115375 35.1079 0.34785 35.6355 0.711378C36.1629 1.07491 36.5961 1.559 36.899 2.12348C37.2018 2.68795 37.3658 3.31654 37.3771 3.95706L35.6912 30.1393C35.4913 33.247 31.4213 34.9762 28.7089 33.1053Z"
