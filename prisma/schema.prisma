@@ -40,3 +40,14 @@ model User {
 
   @@map("users")
 }
+
+/// Outbox queue per sincronizzare i cambi ruolo verso Clerk anche quando il DB viene
+/// aggiornato fuori dall'app (es. da Prisma Studio). Popolata da un trigger MySQL.
+model RoleSyncQueue {
+  userId     String  @id
+  role       Role
+  enqueuedAt DateTime @default(now())
+  processed  Boolean  @default(false)
+
+  @@map("role_sync_queue")
+}
