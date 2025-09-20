@@ -29,25 +29,27 @@ model User {
   role      Role    @default(USER)
   phone     String?
   isActive  Boolean @default(true)
-  
+
   // Relazioni (da implementare in futuro)
   // orders    Order[]
   // products  Product[] // Per i venditori
   // reviews   Review[]
-  
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("users")
 }
 
-/// Outbox queue per sincronizzare i cambi ruolo verso Clerk anche quando il DB viene
-/// aggiornato fuori dall'app (es. da Prisma Studio). Popolata da un trigger MySQL.
-model RoleSyncQueue {
-  userId     String  @id
-  role       Role
-  enqueuedAt DateTime @default(now())
-  processed  Boolean  @default(false)
+model Category {
+  id        String   @id @default(cuid())
+  name      String
+  image     String
+  url       String
+  featured  Boolean  @default(false)
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  @@map("role_sync_queue")
+  @@map("categories")
 }

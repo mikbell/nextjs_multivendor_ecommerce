@@ -29,7 +29,7 @@ export default function RootLayout({
 }>) {
 	return (
 		<ClerkProvider afterSignOutUrl="/">
-			<html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
+			<html lang="it" className="dark scroll-smooth" suppressHydrationWarning>
 				<body
 					className={`${interFont.variable} ${barlowFont.variable} antialiased`}>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
