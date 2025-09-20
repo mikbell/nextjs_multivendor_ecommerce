@@ -3,7 +3,7 @@ import { Inter, Barlow } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
-import { Header } from "@/components/shared/header";
+import { ConditionalRootHeader } from "@/components/shared/conditional-root-header";
 
 const interFont = Inter({
 	variable: "--font-inter",
@@ -28,12 +28,12 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<ClerkProvider>
+		<ClerkProvider afterSignOutUrl="/">
 			<html lang="en" className="dark scroll-smooth" suppressHydrationWarning>
 				<body
 					className={`${interFont.variable} ${barlowFont.variable} antialiased`}>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-						<Header />
+						<ConditionalRootHeader />
 						{children}
 					</ThemeProvider>
 				</body>

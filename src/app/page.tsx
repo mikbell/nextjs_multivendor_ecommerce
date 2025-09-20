@@ -1,9 +1,7 @@
 export default function Home() {
 	return (
 		<>
-			<h2>Bella a tutti ragazzi</h2>
-			<h2 className="font-inter">Bella a tutti ragazzi</h2>
-			<h2 className="font-barlow">Bella a tutti ragazzi</h2>
+			<h1>Home</h1>
 		</>
 	);
 }

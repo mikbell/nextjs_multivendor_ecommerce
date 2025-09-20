@@ -8,6 +8,7 @@ import {
 import { Button } from "../ui/button";
 import { ThemeToggle } from "./theme-toggle";
 import { Logo } from "./logo";
+import Link from "next/link";
 
 export function Header() {
 	return (
@@ -24,6 +25,9 @@ export function Header() {
 					</SignUpButton>
 				</SignedOut>
 				<SignedIn>
+					<Link href="/dashboard">
+						<Button>Dashboard</Button>
+					</Link>
 					<UserButton />
 				</SignedIn>
 				<ThemeToggle />

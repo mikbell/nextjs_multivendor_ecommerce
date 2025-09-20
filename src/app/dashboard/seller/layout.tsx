@@ -1,12 +1,12 @@
 export default function SellerDashboardLayout({
-	childen,
+	children,
 }: {
-	childen: React.ReactNode;
+	children: React.ReactNode;
 }) {
 	return (
 		<div>
 			<h1>Seller Dashboard</h1>
-			{childen}
+			{children}
 		</div>
 	);
 }
