@@ -19,11 +19,10 @@ export const CategoryFormSchema = z.object({
 			url: z.string(),
 		})
 		.array()
-		.min(1, "Carica almeno un'immagine.")
-		.max(1, "Carica al massimo un'immagine."),
+		.length(1, "Carica un'immagine per la categoria."),
 
 	url: z
-		.url({
+		.string({
 			error: (issue) =>
 				issue.input === undefined
 					? "Inserisci un URL."

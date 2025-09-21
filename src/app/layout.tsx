@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ConditionalRootHeader } from "@/components/shared/conditional-root-header";
+import { Toaster } from "@/components/ui/sonner";
 
 const interFont = Inter({
 	variable: "--font-inter",
@@ -29,12 +30,13 @@ export default function RootLayout({
 }>) {
 	return (
 		<ClerkProvider afterSignOutUrl="/">
-			<html lang="it" className="dark scroll-smooth" suppressHydrationWarning>
+			<html lang="it" className="dark" suppressHydrationWarning>
 				<body
 					className={`${interFont.variable} ${barlowFont.variable} antialiased`}>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
 						<ConditionalRootHeader />
 						{children}
+						<Toaster position="bottom-right" />
 					</ThemeProvider>
 				</body>
 			</html>
