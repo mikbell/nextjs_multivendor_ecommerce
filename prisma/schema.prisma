@@ -37,19 +37,35 @@ model User {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  @@map("users")
 }
 
 model Category {
-  id        String   @id @default(cuid())
-  name      String
-  image     String
-  url       String
-  featured  Boolean  @default(false)
-  
+  id          String  @id @default(cuid())
+  name        String
+  slug        String
+  description String
+  image       String
+  featured    Boolean @default(false)
+
+  SubCategory SubCategory[] @relation("CategoryToSubCategory")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SubCategory {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String
+  description String
+  image       String
+  featured    Boolean @default(false)
+
+  category   Category @relation("CategoryToSubCategory", fields: [categoryId], references: [id])
+  categoryId String
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@map("categories")
+  @@index([categoryId])
 }

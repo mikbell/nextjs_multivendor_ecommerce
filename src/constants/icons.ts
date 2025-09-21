@@ -38,7 +38,7 @@ export const icons = [
 	},
 	{
 		label: "Sotto-categorie",
-		value: "subcategories",
+		value: "subCategories",
 		path: ChartColumnStacked,
 	},
 	{

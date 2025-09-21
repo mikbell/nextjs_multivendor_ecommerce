@@ -178,3 +178,20 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* Cloudinary Upload Widget integration tweaks */
+/* When widget is open, prevent interacting with the app underneath */
+body.cld-widget-open {
+  overflow: hidden;
+}
+body.cld-widget-open [data-state="open"][role="dialog"],
+body.cld-widget-open [data-state="open"][data-radix-dialog-content] {
+  pointer-events: none;
+}
+/* Try to ensure Cloudinary iframes get the pointer events and high stacking */
+body.cld-widget-open iframe[src*="cloudinary"],
+body.cld-widget-open .cloudinary-widget,
+body.cld-widget-open .cloudinary-overlay {
+  pointer-events: auto !important;
+  z-index: 100000 !important;
+}

@@ -20,11 +20,11 @@ export const upsertCategory = async (category: Category) => {
 			throw new Error("Dati categoria non forniti.");
 		}
 
-		const existingCategory = await prisma?.category.findFirst({
+		const existingCategory = await db.category.findFirst({
 			where: {
 				AND: [
 					{
-						OR: [{ name: category.name }, { url: category.url }],
+						OR: [{ name: category.name }, { slug: category.slug }],
 					},
 					{
 						NOT: {
@@ -40,8 +40,8 @@ export const upsertCategory = async (category: Category) => {
 
 			if (existingCategory.name === category.name) {
 				errorMessage = "Nome categoria esistente.";
-			} else if (existingCategory.url === category.url) {
-				errorMessage = "URL categoria esistente.";
+			} else if (existingCategory.slug === category.slug) {
+				errorMessage = "Slug categoria esistente.";
 			}
 
 			throw new Error(errorMessage);
@@ -59,4 +59,32 @@ export const upsertCategory = async (category: Category) => {
 	} catch (error) {
 		console.log(error);
 	}
+};
+
+export const getAllCategories = async () => {
+	try {
+		const categories = await db.category.findMany({
+			orderBy: {
+				name: "asc",
+			},
+		});
+		return categories;
+	} catch (error) {
+		console.log(error);
+		// Ensure a consistent return type (never undefined)
+		return [];
+	}
+};
+
+export const getCategoryById = async (id: string) => {
+    try {
+        if (!id) throw new Error("ID categoria mancante");
+        const category = await db.category.findUnique({
+            where: { id },
+        });
+        return category || null;
+    } catch (error) {
+        console.log(error);
+        return null;
+    }
 };

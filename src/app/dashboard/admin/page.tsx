@@ -1,3 +1,5 @@
+import { Title } from "@/components/dashboard/title";
+
 export default function AdminDashboardPage() {
-	return <div>Admin Dashboard</div>;
+	return <Title title="Dashboard amministratore" />;
 }

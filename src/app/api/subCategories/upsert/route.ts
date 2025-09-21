@@ -3,13 +3,14 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 import { z } from "zod";
 
-const CategorySchema = z.object({
+const SubCategorySchema = z.object({
   id: z.string(),
   name: z.string().min(1),
   image: z.string().url().min(1),
   slug: z.string().min(1),
   description: z.string().min(1),
   featured: z.boolean().optional().default(false),
+  categoryId: z.string().min(1),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 });
@@ -21,7 +22,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Non autenticato." }, { status: 401 });
     }
 
-    // Only ADMIN can upsert categories
+    // Only ADMIN can upsert sub-categories
     if (user.privateMetadata.role !== "ADMIN") {
       return NextResponse.json(
         { error: "Non hai i permessi necessari." },
@@ -30,7 +31,7 @@ export async function POST(req: Request) {
     }
 
     const json = await req.json();
-    const parsed = CategorySchema.safeParse(json);
+    const parsed = SubCategorySchema.safeParse(json);
     if (!parsed.success) {
       return NextResponse.json(
         { error: "Dati non validi.", details: parsed.error.flatten() },
@@ -38,51 +39,53 @@ export async function POST(req: Request) {
       );
     }
 
-    const category = parsed.data;
+    const subCategory = parsed.data;
 
     // Check for duplicates by name or slug excluding current id
-    const existingCategory = await db.category.findFirst({
+    const existingSubCategory = await db.subCategory.findFirst({
       where: {
         AND: [
-          { OR: [{ name: category.name }, { slug: category.slug }] },
-          { NOT: { id: category.id } },
+          { OR: [{ name: subCategory.name }, { slug: subCategory.slug }] },
+          { NOT: { id: subCategory.id } },
         ],
       },
     });
 
-    if (existingCategory) {
+    if (existingSubCategory) {
       let errorMessage = "";
-      if (existingCategory.name === category.name) {
-        errorMessage = "Nome categoria esistente.";
-      } else if (existingCategory.slug === category.slug) {
-        errorMessage = "Slug categoria esistente.";
+      if (existingSubCategory.name === subCategory.name) {
+        errorMessage = "Nome sotto-categoria esistente.";
+      } else if (existingSubCategory.slug === subCategory.slug) {
+        errorMessage = "Slug sotto-categoria esistente.";
       }
       return NextResponse.json({ error: errorMessage }, { status: 409 });
     }
 
-    const categoryDetails = await db.category.upsert({
-      where: { id: category.id },
+    const details = await db.subCategory.upsert({
+      where: { id: subCategory.id },
       update: {
-        name: category.name,
-        image: category.image,
-        slug: category.slug,
-        description: category.description,
-        featured: category.featured,
-        updatedAt: category.updatedAt,
+        name: subCategory.name,
+        image: subCategory.image,
+        slug: subCategory.slug,
+        description: subCategory.description,
+        featured: subCategory.featured,
+        categoryId: subCategory.categoryId,
+        updatedAt: subCategory.updatedAt,
       },
       create: {
-        id: category.id,
-        name: category.name,
-        image: category.image,
-        slug: category.slug,
-        description: category.description,
-        featured: category.featured,
-        createdAt: category.createdAt,
-        updatedAt: category.updatedAt,
+        id: subCategory.id,
+        name: subCategory.name,
+        image: subCategory.image,
+        slug: subCategory.slug,
+        description: subCategory.description,
+        featured: subCategory.featured,
+        categoryId: subCategory.categoryId,
+        createdAt: subCategory.createdAt,
+        updatedAt: subCategory.updatedAt,
       },
     });
 
-    return NextResponse.json(categoryDetails, { status: 200 });
+    return NextResponse.json(details, { status: 200 });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
