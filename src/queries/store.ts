@@ -11,7 +11,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { ShippingRate, Store } from "@prisma/client";
 
 // Function: upsertStore
-// Description: Upserts store details into the database, ensuring uniqueness of name,url, email, and phone number.
+// Description: Upserts store details into the database, ensuring uniqueness of name,slug, email, and phone number.
 // Access Level: Seller Only
 // Parameters:
 //   - store: Partial store object containing details of the store to be upserted.
@@ -33,7 +33,7 @@ export const upsertStore = async (store: Store) => {
 		// Ensure store data is provided
 		if (!store) throw new Error("Please provide store data.");
 
-		// Check if store with same name, email,url, or phone number already exists
+		// Check if store with same name, email,slug, or phone number already exists
 		const existingStore = await db.store.findFirst({
 			where: {
 				AND: [
@@ -42,7 +42,7 @@ export const upsertStore = async (store: Store) => {
 							{ name: store.name },
 							{ email: store.email },
 							{ phone: store.phone },
-							{ url: store.url },
+							{ slug: store.slug },
 						],
 					},
 					{
@@ -63,8 +63,8 @@ export const upsertStore = async (store: Store) => {
 				errorMessage = "A store with the same email already exists";
 			} else if (existingStore.phone === store.phone) {
 				errorMessage = "A store with the same phone number already exists";
-			} else if (existingStore.url === store.url) {
-				errorMessage = "A store with the same URL already exists";
+			} else if (existingStore.slug === store.slug) {
+				errorMessage = "A store with the same slug already exists";
 			}
 			throw new Error(errorMessage);
 		}
@@ -86,7 +86,7 @@ export const upsertStore = async (store: Store) => {
 			description: store.description,
 			email: store.email,
 			phone: store.phone,
-			url: store.url,
+			slug: store.slug,
 			slug: computedSlug,
 			logo: store.logo,
 			cover: store.cover,
@@ -97,7 +97,8 @@ export const upsertStore = async (store: Store) => {
 			returnPolicy: store.returnPolicy,
 			defaultShippingService: store.defaultShippingService,
 			defaultShippingFeePerItem: store.defaultShippingFeePerItem,
-			defaultShippingFeeForAdditionalItem: store.defaultShippingFeeForAdditionalItem,
+			defaultShippingFeeForAdditionalItem:
+				store.defaultShippingFeeForAdditionalItem,
 			defaultShippingFeePerKg: store.defaultShippingFeePerKg,
 			defaultShippingFeeFixed: store.defaultShippingFeeFixed,
 			defaultDeliveryTimeMin: store.defaultDeliveryTimeMin,
@@ -125,19 +126,19 @@ export const upsertStore = async (store: Store) => {
 };
 
 // Function: getStoreDefaultShippingDetails
-// Description: Fetches the default shipping details for a store based on the store URL.
+// Description: Fetches the default shipping details for a store based on the store slug.
 // Parameters:
-//   - storeUrl: The URL of the store to fetch default shipping details for.
+//   - storeSlug: The slug of the store to fetch default shipping details for.
 // Returns: An object containing default shipping details, including shipping service, fees, delivery times, and return policy.
-export const getStoreDefaultShippingDetails = async (storeUrl: string) => {
+export const getStoreDefaultShippingDetails = async (storeSlug: string) => {
 	try {
-		// Ensure the store URL is provided
-		if (!storeUrl) throw new Error("Store URL is required.");
+		// Ensure the store slug is provided
+		if (!storeSlug) throw new Error("Store slug is required.");
 
 		// Fetch the store and its default shipping details
 		const store = await db.store.findUnique({
 			where: {
-				url: storeUrl,
+				slug: storeSlug,
 			},
 			select: {
 				defaultShippingService: true,
@@ -163,13 +164,13 @@ export const getStoreDefaultShippingDetails = async (storeUrl: string) => {
 };
 
 // Function: updateStoreDefaultShippingDetails
-// Description: Updates the default shipping details for a store based on the store URL.
+// Description: Updates the default shipping details for a store based on the store slug.
 // Parameters:
-//   - storeUrl: The URL of the store to update.
+//   - storeSlug: The slug of the store to update.
 //   - details: An object containing the new shipping details (shipping service, fees, delivery times, and return policy).
 // Returns: The updated store object with the new default shipping details.
 export const updateStoreDefaultShippingDetails = async (
-	storeUrl: string,
+	storeSlug: string,
 	details: StoreDefaultShippingType
 ) => {
 	try {
@@ -185,8 +186,8 @@ export const updateStoreDefaultShippingDetails = async (
 				"Unauthorized Access: Seller Privileges Required for Entry."
 			);
 
-		// Ensure the store URL is provided
-		if (!storeUrl) throw new Error("Store URL is required.");
+		// Ensure the store slug is provided
+		if (!storeSlug) throw new Error("Store slug is required.");
 
 		// Ensure at least one detail is provided for update
 		if (!details) {
@@ -195,7 +196,7 @@ export const updateStoreDefaultShippingDetails = async (
 		// Make sure seller is updating their own store
 		const check_ownership = await db.store.findUnique({
 			where: {
-				url: storeUrl,
+				slug: storeSlug,
 				userId: user.id,
 			},
 		});
@@ -205,10 +206,10 @@ export const updateStoreDefaultShippingDetails = async (
 				"Make sure you have the permissions to update this store"
 			);
 
-		// Find and update the store based on storeUrl
+		// Find and update the store based on storeSlug
 		const updatedStore = await db.store.update({
 			where: {
-				url: storeUrl,
+				slug: storeSlug,
 				userId: user.id,
 			},
 			data: details,
@@ -229,7 +230,7 @@ export const updateStoreDefaultShippingDetails = async (
  * Permission Level: Public
  * Returns: Array of objects where each object contains a country and its associated shippingRate, sorted by country name.
  */
-export const getStoreShippingRates = async (storeUrl: string) => {
+export const getStoreShippingRates = async (storeSlug: string) => {
 	try {
 		// Get current user
 		const user = await currentUser();
@@ -243,13 +244,13 @@ export const getStoreShippingRates = async (storeUrl: string) => {
 				"Unauthorized Access: Seller Privileges Required for Entry."
 			);
 
-		// Ensure the store URL is provided
-		if (!storeUrl) throw new Error("Store URL is required.");
+		// Ensure the store slug is provided
+		if (!storeSlug) throw new Error("Store slug is required.");
 
 		// Make sure seller is updating their own store
 		const check_ownership = await db.store.findUnique({
 			where: {
-				url: storeUrl,
+				slug: storeSlug,
 				userId: user.id,
 			},
 		});
@@ -261,7 +262,7 @@ export const getStoreShippingRates = async (storeUrl: string) => {
 
 		// Get store details
 		const store = await db.store.findUnique({
-			where: { url: storeUrl, userId: user.id },
+			where: { slug: storeSlug, userId: user.id },
 		});
 
 		if (!store) throw new Error("Store could not be found.");
@@ -304,11 +305,11 @@ export const getStoreShippingRates = async (storeUrl: string) => {
 // Description: Upserts a shipping rate for a specific country, updating if it exists or creating a new one if not.
 // Permission Level: Seller only
 // Parameters:
-//   - storeUrl: Url of the store you are trying to update.
+//   - storeSlug: slug of the store you are trying to update.
 //   - shippingRate: ShippingRate object containing the details of the shipping rate to be upserted.
 // Returns: Updated or newly created shipping rate details.
 export const upsertShippingRate = async (
-	storeUrl: string,
+	storeSlug: string,
 	shippingRate: ShippingRate
 ) => {
 	try {
@@ -327,7 +328,7 @@ export const upsertShippingRate = async (
 		// Make sure seller is updating their own store
 		const check_ownership = await db.store.findUnique({
 			where: {
-				url: storeUrl,
+				slug: storeSlug,
 				userId: user.id,
 			},
 		});
@@ -347,11 +348,11 @@ export const upsertShippingRate = async (
 		// Get store id
 		const store = await db.store.findUnique({
 			where: {
-				url: storeUrl,
+				slug: storeSlug,
 				userId: user.id,
 			},
 		});
-		if (!store) throw new Error("Please provide a valid store URL.");
+		if (!store) throw new Error("Please provide a valid store slug.");
 
 		// Upsert the shipping rate into the database
 		const shippingRateDetails = await db.shippingRate.upsert({
@@ -375,10 +376,10 @@ export const upsertShippingRate = async (
  * @description - Retrieves all orders for a specific store.
  *              - Returns order that include items, order details.
  * @access User
- * @param storeUrl - The url of the store whose order groups are being retrieved.
+ * @param storeSlug - The slug of the store whose order groups are being retrieved.
  * @returns {Array} - Array of order groups, including items.
  */
-export const getStoreOrders = async (storeUrl: string) => {
+export const getStoreOrders = async (storeSlug: string) => {
 	try {
 		// Retrieve current user
 		const user = await currentUser();
@@ -392,10 +393,10 @@ export const getStoreOrders = async (storeUrl: string) => {
 				"Unauthorized Access: Seller Privileges Required for Entry."
 			);
 
-		// Get store id using url
+		// Get store id using slug
 		const store = await db.store.findUnique({
 			where: {
-				url: storeUrl,
+				slug: storeSlug,
 			},
 		});
 
@@ -456,7 +457,7 @@ export const applySeller = async (store: StoreType) => {
 		// Ensure store data is provided
 		if (!store) throw new Error("Please provide store data.");
 
-		// Check if store with same name, email,url, or phone number already exists
+		// Check if store with same name, email,slug, or phone number already exists
 		const existingStore = await db.store.findFirst({
 			where: {
 				AND: [
@@ -465,7 +466,7 @@ export const applySeller = async (store: StoreType) => {
 							{ name: store.name },
 							{ email: store.email },
 							{ phone: store.phone },
-							{ url: store.url },
+							{ slug: store.slug },
 						],
 					},
 				],
@@ -481,8 +482,8 @@ export const applySeller = async (store: StoreType) => {
 				errorMessage = "A store with the same email already exists";
 			} else if (existingStore.phone === store.phone) {
 				errorMessage = "A store with the same phone number already exists";
-			} else if (existingStore.url === store.url) {
-				errorMessage = "A store with the same URL already exists";
+			} else if (existingStore.slug === store.slug) {
+				errorMessage = "A store with the same slug already exists";
 			}
 			throw new Error(errorMessage);
 		}
@@ -643,11 +644,11 @@ export const deleteStore = async (storeId: string) => {
 	}
 };
 
-export const getStorePageDetails = async (storeUrl: string) => {
+export const getStorePageDetails = async (storeSlug: string) => {
 	// Fetch the store details from the database
 	const store = await db.store.findFirst({
 		where: {
-			url: storeUrl,
+			slug: storeSlug,
 			status: "ACTIVE",
 		},
 		select: {
@@ -663,7 +664,7 @@ export const getStorePageDetails = async (storeUrl: string) => {
 
 	// Handle case where the store is not found
 	if (!store) {
-		throw new Error(`Store with URL "${storeUrl}" not found.`);
+		throw new Error(`Store with slug "${storeSlug}" not found.`);
 	}
 	return store;
 };

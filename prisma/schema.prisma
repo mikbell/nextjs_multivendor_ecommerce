@@ -25,38 +25,81 @@ model User {
   firstName String
   lastName  String
   email     String  @unique
-  picture   String  @db.Text
+  picture   String? @db.Text
   role      Role    @default(USER)
   phone     String?
   isActive  Boolean @default(true)
 
-  // Relazioni (da implementare in futuro)
-  // orders    Order[]
-  // products  Product[] // Per i venditori
-  // reviews   Review[]
+  stores Store[] @relation("UserStores")
+
+  // Aggiunto per tracciare le interazioni utente con recensioni/ordini
+  reviews Review[]
+  orders  Order[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
+}
+
+enum StoreStatus {
+  PENDING
+  ACTIVE
+  BANNED
+  DISABLED
+}
+
+model Store {
+  id          String      @id @default(cuid())
+  name        String
+  slug        String      @unique
+  description String      @db.Text
+  email       String      @unique
+  phone       String
+  logo        String
+  cover       String
+  featured    Boolean     @default(false)
+  status      StoreStatus @default(PENDING)
+
+  // Aggiunto per normalizzare il rating medio
+  averageRating Float @default(0)
+  ratingCount   Int   @default(0)
+
+  returnPolicy           String
+  defaultShippingService String?
+  defaultShippingFee     Float?
+  defaultDeliveryTimeMin Int?
+  defaultDeliveryTimeMax Int?
+
+  products Product[] @relation("StoreToProduct")
+  reviews  Review[]  @relation("StoreToReview")
+
+  userId String
+  user   User   @relation("UserStores", fields: [userId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId])
 }
 
 model Category {
   id          String  @id @default(cuid())
   name        String
-  slug        String
+  slug        String  @unique
   description String
   image       String
   featured    Boolean @default(false)
 
-  SubCategory SubCategory[] @relation("CategoryToSubCategory")
+  subcategories SubCategory[] @relation("CategoryToSubCategory")
+  products      Product[]     @relation("CategoryToProduct")
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 }
 
 model SubCategory {
   id          String  @id @default(cuid())
   name        String
-  slug        String
+  slug        String  @unique
   description String
   image       String
   featured    Boolean @default(false)
@@ -64,8 +107,164 @@ model SubCategory {
   category   Category @relation("CategoryToSubCategory", fields: [categoryId], references: [id])
   categoryId String
 
+  products Product[] @relation("SubCategoryToProduct")
+
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([categoryId])
+}
+
+model Product {
+  id          String @id @default(cuid())
+  name        String
+  description String @db.Text
+  slug        String @unique
+  brand       String
+  rating      Float  @default(0)
+
+  variants ProductVariant[] @relation("ProductToProductVariant")
+  reviews  Review[]
+
+  store   Store  @relation("StoreToProduct", fields: [storeId], references: [id])
+  storeId String
+
+  category   Category @relation("CategoryToProduct", fields: [categoryId], references: [id])
+  categoryId String
+
+  subCategory   SubCategory @relation("SubCategoryToProduct", fields: [subCategoryId], references: [id])
+  subCategoryId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([storeId])
+  @@index([categoryId])
+  @@index([subCategoryId])
+}
+
+model ProductVariant {
+  id          String  @id @default(cuid())
+  name        String
+  description String  @db.Text
+  slug        String  @unique
+  isOnSale    Boolean @default(false)
+  keywords    String
+  sku         String  @unique
+
+  sizes  ProductVariantSize[]  @relation("ProductVariantToSize")
+  images ProductVariantImage[] @relation("ProductVariantToImage")
+  colors ProductVariantColor[] @relation("ProductVariantToColor")
+
+  mainImage String
+  price     Float
+
+  product   Product @relation("ProductToProductVariant", fields: [productId], references: [id])
+  productId String
+
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @default(now()) @updatedAt
+  OrderItem OrderItem[]
+
+  @@index([productId])
+}
+
+model ProductVariantSize {
+  id       String @id @default(cuid())
+  size     String
+  quantity Int
+
+  variant   ProductVariant @relation("ProductVariantToSize", fields: [variantId], references: [id])
+  variantId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([variantId])
+}
+
+model ProductVariantImage {
+  id  String  @id @default(cuid())
+  url String
+  alt String?
+
+  variant   ProductVariant @relation("ProductVariantToImage", fields: [variantId], references: [id])
+  variantId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([variantId])
+}
+
+model ProductVariantColor {
+  id   String @id @default(cuid())
+  name String
+  code String
+
+  variant   ProductVariant @relation("ProductVariantToColor", fields: [variantId], references: [id])
+  variantId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([variantId])
+}
+
+model Review {
+  id      String  @id @default(cuid())
+  rating  Int
+  title   String?
+  comment String? @db.Text
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  product   Product @relation(fields: [productId], references: [id])
+  productId String
+
+  store   Store  @relation("StoreToReview", fields: [storeId], references: [id])
+  storeId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@unique([userId, productId])
+  @@index([userId])
+  @@index([productId])
+  @@index([storeId])
+}
+
+model Order {
+  id          String @id @default(cuid())
+  totalAmount Float
+  status      String
+
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+
+  orderItems OrderItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([userId])
+}
+
+model OrderItem {
+  id          String @id @default(cuid())
+  quantity    Int
+  priceAtTime Float
+
+  order   Order  @relation(fields: [orderId], references: [id])
+  orderId String
+
+  productVariant   ProductVariant @relation(fields: [productVariantId], references: [id])
+  productVariantId String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
+
+  @@index([orderId])
+  @@index([productVariantId])
 }

@@ -1,12 +1,9 @@
 "use client";
 
-import { Category, ShippingFeeMethod } from "@prisma/client";
-import { ProductFormSchema } from "@/lib/schemas";
 import { FC, useMemo } from "react";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
 	Form,
 	FormField,
@@ -14,56 +11,69 @@ import {
 	FormLabel,
 	FormControl,
 	FormMessage,
-	FormDescription,
 } from "@/components/ui/form";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import ImageUpload from "@/components/dashboard/shared/image-upload";
 import { toast } from "sonner";
 import { Textarea } from "@/components/ui/textarea";
+import { Trash2 } from "lucide-react";
+
+import {
+	ProductFormSchema,
+	ProductFormSchemaInputType,
+	ProductFormSchemaOutputType,
+} from "@/lib/schemas"; // Assicurati che il percorso sia corretto
 
 interface ProductDetailsProps {
-	categories: Category[];
+	stores: { id: string; name: string }[];
+	categories: { id: string; name: string }[];
+	subcategories: { id: string; name: string; categoryId: string }[];
 }
 
-const ProductDetails: FC<ProductDetailsProps> = ({ categories }) => {
-
-	const defaultValues = useMemo<Partial<z.input<typeof ProductFormSchema>>>(
-		() => ({
-			name: "",
-			description: "",
-			variantName: "",
-			variantDescription: "",
-			images: [],
-			variantImage: [],
-			brand: "",
-			sku: "",
-			weight: 0.01,
-			categoryId: "",
-			subCategoryId: "",
-			offerTagId: undefined,
-			keywords: [],
-			colors: [],
-			sizes: [
-				{ size: "", quantity: 1, price: 0.01, discount: 0 },
-			],
-			product_specs: [{ name: "", value: "" }],
-			variant_specs: [{ name: "", value: "" }],
-			questions: [{ question: "", answer: "" }],
-			isSale: false,
-			saleEndDate: undefined,
-			freeShippingForAllCountries: false,
-			freeShippingCountriesIds: [],
-			shippingFeeMethod: ShippingFeeMethod.ITEM,
-		}),
-		[]
-	);
+const ProductDetails: FC<ProductDetailsProps> = ({
+	stores,
+	categories,
+	subcategories,
+}) => {
+	// Rimosso useMemo, non necessario per valori statici
+	const defaultValues: ProductFormSchemaInputType = {
+		name: "",
+		description: "",
+		slug: "",
+		brand: "",
+		storeId: "",
+		categoryId: "",
+		subCategoryId: "",
+		rating: 0,
+		variants: [
+			{
+				name: "",
+				description: "",
+				slug: "",
+				isOnSale: false,
+				keywords: "",
+				sku: "",
+				mainImage: "",
+				price: 0,
+				sizes: [],
+				images: [],
+				colors: [],
+			},
+		],
+	};
 
 	const form = useForm<
-		z.input<typeof ProductFormSchema>,
-		unknown,
-		z.infer<typeof ProductFormSchema>
+		ProductFormSchemaInputType,
+		undefined,
+		ProductFormSchemaOutputType
 	>({
 		resolver: zodResolver(ProductFormSchema),
 		defaultValues,
@@ -71,500 +81,325 @@ const ProductDetails: FC<ProductDetailsProps> = ({ categories }) => {
 
 	const isLoading = form.formState.isSubmitting;
 
-	const handleSubmit = async (values: z.infer<typeof ProductFormSchema>) => {
+	const { fields, append, remove } = useFieldArray({
+		control: form.control,
+		name: "variants",
+	});
+
+	const handleSubmit = async (values: ProductFormSchemaOutputType) => {
 		try {
-			// At this point, values already match ProductFormSchema
 			console.log("Submitting product payload", values);
-			// TODO: integrate with your API or server action, e.g. /api/products/upsert
-			// const res = await fetch("/api/products/upsert", { ... });
-			toast.success("Prodotto", {
-				description: "Prodotto pronto per la creazione (payload in console).",
+			toast.success("Prodotto creato!", {
+				description: "Il prodotto è stato preparato con successo.",
 			});
-			// Optionally navigate to a products page
-			// router.push(`/dashboard/seller/products`);
 		} catch (error) {
-			console.log(error);
-			toast.error("Prodotto", {
-				description: "Errore durante la preparazione del prodotto.",
+			console.error(error);
+			toast.error("Errore", {
+				description:
+					"Si è verificato un errore durante la creazione del prodotto.",
 			});
 		}
 	};
 
+	// Uso di useMemo per filtrare le sottocategorie in modo efficiente
+	const selectedCategory = form.watch("categoryId");
+	const filteredSubcategories = useMemo(
+		() => subcategories.filter((sub) => sub.categoryId === selectedCategory),
+		[subcategories, selectedCategory]
+	);
+
 	return (
 		<Card className="w-full">
 			<CardHeader>
-				<CardTitle>Nuovo prodotto</CardTitle>
+				<CardTitle>Nuovo Prodotto</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(handleSubmit)}
-						className="space-y-10"
+						className="space-y-8"
 						autoComplete="off"
 						suppressHydrationWarning>
-						{/* Images */}
-						<FormField
-							control={form.control}
-							name="images"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Immagini prodotto</FormLabel>
-									<FormDescription>Fino a 6 immagini.</FormDescription>
-									<FormControl>
-										<ImageUpload
-											type="product"
-											maxImages={6}
-											uploadText="Carica immagini"
-											removeText="Rimuovi"
-											value={(field.value ?? []).map((image) => image.url)}
-											disabled={isLoading}
-											onChange={(url) => field.onChange([...(field.value ?? []), { url }])}
-											onRemove={(url) =>
-												field.onChange((field.value ?? []).filter((image) => image.url !== url))
-											}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{/* Variant Image */}
-						<FormField
-							control={form.control}
-							name="variantImage"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Immagine variante</FormLabel>
-									<FormDescription>Una sola immagine per la variante.</FormDescription>
-									<FormControl>
-										<ImageUpload
-											type="variant"
-											maxImages={1}
-											uploadText="Carica immagine"
-											removeText="Rimuovi"
-											value={(field.value ?? []).map((image) => image.url)}
-											disabled={isLoading}
-											onChange={(url) => field.onChange([{ url }])}
-											onRemove={(url) =>
-												field.onChange((field.value ?? []).filter((image) => image.url !== url))
-											}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{/* Core info */}
-						<FormField
-							control={form.control}
-							name="name"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome prodotto</FormLabel>
-									<FormControl>
-										<Input placeholder="Nome" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="description"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Descrizione</FormLabel>
-									<FormControl>
-										<Textarea placeholder="Descrizione dettagliata" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{/* Variant core */}
-						<FormField
-							control={form.control}
-							name="variantName"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome variante</FormLabel>
-									<FormControl>
-										<Input placeholder="Es. Rosso, 64GB" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="variantDescription"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Descrizione variante</FormLabel>
-									<FormControl>
-										<Textarea placeholder="Dettagli della variante (opzionale)" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{/* Categorization */}
-						<FormField
-							control={form.control}
-							name="categoryId"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Categoria</FormLabel>
-									<FormDescription>Seleziona la categoria.</FormDescription>
-									<FormControl>
-										<select
-											className="w-full border rounded h-10 px-3"
-											value={field.value || ""}
-											onChange={(e) => field.onChange(e.target.value)}
-										>
-											<option value="">-- seleziona --</option>
-											{categories.map((c) => (
-												<option key={c.id} value={c.id}>
-													{c.name}
-												</option>
-											))}
-										</select>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="subCategoryId"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Sottocategoria</FormLabel>
-									<FormControl>
-										<Input placeholder="ID sottocategoria" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{/* Product details */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-							<FormField
-								control={form.control}
-								name="brand"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Marca</FormLabel>
-										<FormControl>
-											<Input placeholder="Marca" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="sku"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>SKU</FormLabel>
-										<FormControl>
-											<Input placeholder="SKU" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="weight"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Peso (kg)</FormLabel>
-										<FormControl>
-											<Input
-												type="number"
-												step="0.01"
-												min="0.01"
-												name={field.name}
-												onBlur={field.onBlur}
-												ref={field.ref}
-												value={Number(field.value ?? 0.01)}
-												onChange={(e) => field.onChange(Number(e.target.value))}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-
-						{/* Keyword & Colors (comma-separated helpers) */}
-						<FormField
-							control={form.control}
-							name="keywords"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Parole chiave (separate da virgola)</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="es. smartphone, 5g, android"
-											value={(field.value ?? []).join(", ")}
-											onChange={(e) =>
-												field.onChange(
-													e.target.value
-														.split(",")
-														.map((s) => s.trim())
-														.filter(Boolean)
-												)
-											}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="colors"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Colori (separati da virgola)</FormLabel>
-									<FormControl>
-										<Input
-											placeholder="es. rosso, blu, nero"
-											value={
-												((field.value as { color: string }[] | undefined) ?? [])
-													.map((c) => c.color)
-													.join(", ")
-											}
-											onChange={(e) => {
-												const next = e.target.value
-													.split(",")
-													.map((s) => s.trim())
-													.filter(Boolean)
-													.map((color) => ({ color }));
-												field.onChange(next);
-											}}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						{/* Sizes - single entry helper */}
-						<FormField
-							control={form.control}
-							name="sizes"
-							render={({ field }) => {
-								type SizeItem = { size: string; quantity: number; price: number; discount: number };
-								const list = (field.value as SizeItem[] | undefined) ?? [];
-								const current: SizeItem = list[0] ?? {
-									size: "",
-									quantity: 1,
-									price: 0.01,
-									discount: 0,
-								};
-								return (
-									<FormItem>
-										<FormLabel>Taglia e Prezzo</FormLabel>
-										<div className="grid grid-cols-1 md:grid-cols-4 gap-3">
-											<Input
-												placeholder="Taglia"
-												value={current.size}
-												onChange={(e) =>
-													field.onChange([{ ...current, size: e.target.value } as SizeItem])
-												}
-											/>
-											<Input
-												type="number"
-												min={1}
-												placeholder="Quantità"
-												value={current.quantity}
-												onChange={(e) =>
-													field.onChange([
-														{ ...current, quantity: Number(e.target.value) } as SizeItem,
-													])
-												}
-											/>
-											<Input
-												type="number"
-												step="0.01"
-												min={0.01}
-												placeholder="Prezzo"
-												value={current.price}
-												onChange={(e) =>
-													field.onChange([
-														{ ...current, price: Number(e.target.value) } as SizeItem,
-													])
-												}
-											/>
-											<Input
-												type="number"
-												min={0}
-												placeholder="Sconto %"
-												value={current.discount}
-												onChange={(e) =>
-													field.onChange([
-														{ ...current, discount: Number(e.target.value) } as SizeItem,
-													])
-												}
-											/>
-										</div>
-										<FormMessage />
-									</FormItem>
-								);
-							}}
-						/>
-
-						{/* Specs & Questions - single entry helpers */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-							<FormField
-								control={form.control}
-								name="product_specs"
-								render={({ field }) => {
-									const cur = (field.value && field.value[0]) || { name: "", value: "" };
-									return (
+						{/* Campi del Prodotto Principale */}
+						<div className="space-y-4">
+							<h3 className="text-lg font-semibold">Dettagli Principali</h3>
+							<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+								<FormField
+									control={form.control}
+									name="name"
+									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Specifica prodotto</FormLabel>
-											<div className="grid grid-cols-2 gap-2">
-												<Input placeholder="Nome" value={cur.name} onChange={(e) => field.onChange([{ ...cur, name: e.target.value }])} />
-												<Input placeholder="Valore" value={cur.value} onChange={(e) => field.onChange([{ ...cur, value: e.target.value }])} />
-											</div>
+											<FormLabel>Nome prodotto</FormLabel>
+											<FormControl>
+												<Input placeholder="Nome" {...field} />
+											</FormControl>
 											<FormMessage />
 										</FormItem>
-									);
-								}}
-							/>
-							<FormField
-								control={form.control}
-								name="variant_specs"
-								render={({ field }) => {
-									const cur = (field.value && field.value[0]) || { name: "", value: "" };
-									return (
+									)}
+								/>
+								<FormField
+									control={form.control}
+									name="slug"
+									render={({ field }) => (
 										<FormItem>
-											<FormLabel>Specifica variante</FormLabel>
-											<div className="grid grid-cols-2 gap-2">
-												<Input placeholder="Nome" value={cur.name} onChange={(e) => field.onChange([{ ...cur, name: e.target.value }])} />
-												<Input placeholder="Valore" value={cur.value} onChange={(e) => field.onChange([{ ...cur, value: e.target.value }])} />
-											</div>
+											<FormLabel>Slug</FormLabel>
+											<FormControl>
+												<Input placeholder="slug-del-prodotto" {...field} />
+											</FormControl>
 											<FormMessage />
 										</FormItem>
-									);
-								}}
-							/>
+									)}
+								/>
+							</div>
 							<FormField
 								control={form.control}
-								name="questions"
-								render={({ field }) => {
-									const cur = (field.value && field.value[0]) || { question: "", answer: "" };
-									return (
-										<FormItem>
-											<FormLabel>FAQ</FormLabel>
-											<div className="grid grid-cols-2 gap-2">
-												<Input placeholder="Domanda" value={cur.question} onChange={(e) => field.onChange([{ ...cur, question: e.target.value }])} />
-												<Input placeholder="Risposta" value={cur.answer} onChange={(e) => field.onChange([{ ...cur, answer: e.target.value }])} />
-											</div>
-											<FormMessage />
-										</FormItem>
-									);
-								}}
-							/>
-						</div>
-
-						{/* Shipping & Offers */}
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-							<FormField
-								control={form.control}
-								name="shippingFeeMethod"
+								name="description"
 								render={({ field }) => (
 									<FormItem>
-										<FormLabel>Metodo spedizione</FormLabel>
+										<FormLabel>Descrizione</FormLabel>
 										<FormControl>
-											<select
-												className="w-full border rounded h-10 px-3"
-												value={field.value}
-												onChange={(e) => field.onChange(e.target.value)}
-											>
-												<option value="ITEM">Per articolo</option>
-												<option value="WEIGHT">Per peso</option>
-												<option value="FIXED">Fisso</option>
-											</select>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="offerTagId"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Offer tag (opzionale)</FormLabel>
-										<FormControl>
-											<Input placeholder="ID tag offerta" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="isSale"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-2">
-										<FormLabel>In promozione</FormLabel>
-										<FormControl>
-											<Checkbox
-												checked={field.value}
-												onCheckedChange={(checked) => field.onChange(checked === true)}
+											<Textarea
+												placeholder="Descrizione dettagliata"
+												{...field}
 											/>
 										</FormControl>
 										<FormMessage />
 									</FormItem>
 								)}
 							/>
+							<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+								{/* Componente Select per Negozio */}
+								<FormField
+									control={form.control}
+									name="storeId"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Negozio</FormLabel>
+											<Select
+												onValueChange={field.onChange}
+												defaultValue={field.value}>
+												<FormControl>
+													<SelectTrigger>
+														<SelectValue placeholder="Seleziona un negozio" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{stores.map((store) => (
+														<SelectItem key={store.id} value={store.id}>
+															{store.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								{/* Componente Select per Categoria */}
+								<FormField
+									control={form.control}
+									name="categoryId"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Categoria</FormLabel>
+											<Select
+												onValueChange={(value) => {
+													field.onChange(value);
+													form.setValue("subCategoryId", ""); // Resetta la sottocategoria
+												}}
+												defaultValue={field.value}>
+												<FormControl>
+													<SelectTrigger>
+														<SelectValue placeholder="Seleziona una categoria" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{categories.map((c) => (
+														<SelectItem key={c.id} value={c.id}>
+															{c.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+								{/* Componente Select per Sottocategoria */}
+								<FormField
+									control={form.control}
+									name="subCategoryId"
+									render={({ field }) => (
+										<FormItem>
+											<FormLabel>Sottocategoria</FormLabel>
+											<Select
+												onValueChange={field.onChange}
+												defaultValue={field.value}
+												disabled={!selectedCategory}>
+												<FormControl>
+													<SelectTrigger>
+														<SelectValue placeholder="Seleziona una sottocategoria" />
+													</SelectTrigger>
+												</FormControl>
+												<SelectContent>
+													{filteredSubcategories.map((sub) => (
+														<SelectItem key={sub.id} value={sub.id}>
+															{sub.name}
+														</SelectItem>
+													))}
+												</SelectContent>
+											</Select>
+											<FormMessage />
+										</FormItem>
+									)}
+								/>
+							</div>
 						</div>
 
-						<FormField
-							control={form.control}
-							name="saleEndDate"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Fine promozione (opzionale)</FormLabel>
-									<FormControl>
-										<Input type="date" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="freeShippingForAllCountries"
-							render={({ field }) => (
-								<FormItem className="flex items-center gap-2">
-									<FormLabel>Spedizione gratuita globale</FormLabel>
-									<FormControl>
-										<Checkbox
-											checked={field.value}
-											onCheckedChange={(checked) => field.onChange(checked === true)}
+						{/* Campi delle Varianti */}
+						<div className="space-y-4">
+							<h3 className="text-lg font-semibold">Varianti Prodotto</h3>
+							{fields.map((field, index) => (
+								<div
+									key={field.id}
+									className="space-y-4 border p-4 rounded-md relative">
+									{fields.length > 1 && (
+										<Button
+											type="button"
+											variant="destructive"
+											size="icon"
+											onClick={() => remove(index)}
+											className="absolute top-2 right-2"
+											disabled={isLoading}>
+											<Trash2 className="h-4 w-4" />
+										</Button>
+									)}
+									<FormField
+										control={form.control}
+										name={`variants.${index}.name`}
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Nome variante</FormLabel>
+												<FormControl>
+													<Input placeholder="Es. Colore Rosso" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name={`variants.${index}.description`}
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Descrizione variante</FormLabel>
+												<FormControl>
+													<Textarea
+														placeholder="Dettagli specifici della variante"
+														{...field}
+													/>
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<FormField
+										control={form.control}
+										name={`variants.${index}.slug`}
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Slug variante</FormLabel>
+												<FormControl>
+													<Input placeholder="slug-variante" {...field} />
+												</FormControl>
+												<FormMessage />
+											</FormItem>
+										)}
+									/>
+									<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+										<FormField
+											control={form.control}
+											name={`variants.${index}.sku`}
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>SKU</FormLabel>
+													<FormControl>
+														<Input placeholder="SKU" {...field} />
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
 										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
+										<FormField
+											control={form.control}
+											name={`variants.${index}.price`}
+											render={({ field }) => (
+												<FormItem>
+													<FormLabel>Prezzo</FormLabel>
+													<FormControl>
+														<Input
+															type="number"
+															step="0.01"
+															placeholder="Prezzo"
+															{...field}
+															value={field.value}
+															onChange={(e) =>
+																field.onChange(Number(e.target.value))
+															}
+														/>
+													</FormControl>
+													<FormMessage />
+												</FormItem>
+											)}
+										/>
+									</div>
+									<FormField
+										control={form.control}
+										name={`variants.${index}.mainImage`}
+										render={({ field }) => (
+											<FormItem>
+												<FormLabel>Immagine principale</FormLabel>
+												<FormControl>
+													<ImageUpload
+														type="standard"
+														maxImages={1}
+														uploadText="Carica immagine principale"
+														removeText="Rimuovi"
+														value={field.value ? [field.value] : []}
+														disabled={isLoading}
+														onChange={(url) => field.onChange(url)}
+														onRemove={() => field.onChange("")}
+													/>
+												</FormControl>
+											</FormItem>
+										)}
+									/>
+								</div>
+							))}
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() =>
+									append({
+										name: "",
+										description: "",
+										slug: "",
+										isOnSale: false,
+										keywords: "",
+										sku: "",
+										mainImage: "",
+										price: 0,
+										sizes: [],
+										images: [],
+										colors: [],
+									})
+								}
+								disabled={isLoading}>
+								Aggiungi Variante
+							</Button>
+						</div>
 						<Button type="submit" disabled={isLoading}>
-							{isLoading ? "Salvataggio..." : "Crea prodotto"}
+							{isLoading ? "Creazione in corso..." : "Crea Prodotto"}
 						</Button>
 					</form>
 				</Form>
@@ -572,5 +407,4 @@ const ProductDetails: FC<ProductDetailsProps> = ({ categories }) => {
 		</Card>
 	);
 };
-
 export default ProductDetails;

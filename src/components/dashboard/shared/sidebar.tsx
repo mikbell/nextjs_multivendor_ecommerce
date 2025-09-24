@@ -2,16 +2,14 @@ import { currentUser } from "@clerk/nextjs/server";
 import { FC } from "react";
 import { Logo } from "@/components/shared/logo";
 import { UserInfo } from "@/components/dashboard/shared/user-info";
-import NavAdmin from "../admin/nav-admin";
-import { adminDashboardSidebarOptions } from "@/constants/data";
-import { Store } from "@prisma/client";
+import { adminDashboardSidebarOptions, sellerDashboardSidebarOptions } from "@/constants/data";
 import NavSeller from "../seller/nav-seller";
-import { sellerDashboardSidebarOptions } from "@/constants/data";
+import NavAdmin from "../admin/nav-admin";
 import StoreSwitcher from "../seller/store-switcher";
 
 interface SidebarProps {
 	isAdmin?: boolean;
-	stores?: Store[];
+	stores?: { id?: string; name: string; slug: string }[];
 }
 
 const Sidebar: FC<SidebarProps> = async ({ isAdmin, stores }) => {

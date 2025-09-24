@@ -9,13 +9,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload, Trash, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { cn } from "@/lib/utils"; // Assumi che hai una utility 'cn'
 
 interface ImageUploadProps {
 	disabled?: boolean;
 	onChange: (value: string | string[]) => void;
 	onRemove: (value: string) => void;
 	value: string[];
-	type: "standard" | "profile" | "cover";
+	type: "standard" | "profile" | "cover" | "logo";
 	dontShowPreview?: boolean;
 	maxImages?: number;
 	uploadText?: string;
@@ -50,7 +51,6 @@ const ImageUpload: FC<ImageUploadProps> = ({
 	}, []);
 
 	const handleUpload = (result: CloudinaryUploadWidgetResults) => {
-		console.log("Upload result:", result);
 		if (
 			result.event === "success" &&
 			typeof result.info === "object" &&
@@ -58,23 +58,14 @@ const ImageUpload: FC<ImageUploadProps> = ({
 			"secure_url" in result.info &&
 			typeof result.info.secure_url === "string"
 		) {
-			// Type assertion after proper type guards
-			const uploadInfo = result.info as { secure_url: string };
-			const secureUrl = uploadInfo.secure_url;
-			console.log("Secure URL:", secureUrl);
+			const secureUrl = result.info.secure_url;
 			setIsUploading(false);
-			// Se è consentita una sola immagine (profili, cover o maxImages=1),
-			// notifichiamo il parent con una singola stringa per coerenza
-			if (type === "profile" || type === "cover" || maxImages === 1) {
-				console.log("Calling onChange with single value:", secureUrl);
+
+			if (["profile", "cover", "logo"].includes(type) || maxImages === 1) {
 				onChange(secureUrl);
 			} else {
-				// Assicuriamoci che value sia sempre un array valido
 				const currentValues = Array.isArray(value) ? value : [];
-				const newValues = [...currentValues, secureUrl];
-				console.log("New values:", newValues);
-				console.log("Calling onChange with array:", newValues);
-				onChange(newValues);
+				onChange([...currentValues, secureUrl]);
 			}
 		} else {
 			setIsUploading(false);
@@ -88,27 +79,21 @@ const ImageUpload: FC<ImageUploadProps> = ({
 	};
 
 	const maxAllowed =
-		maxImages ?? (type === "profile" || type === "cover" ? 1 : 10);
+		maxImages ?? (["profile", "cover", "logo"].includes(type) ? 1 : 10);
 	const isSingle = maxAllowed === 1;
 	const imagesToShow = Array.isArray(value)
 		? value.filter((url) => typeof url === "string" && url.trim() !== "")
 		: [];
 	const canAddMore = imagesToShow.length < maxAllowed;
 
-	// Debug: log dei valori calcolati
-	console.log("ImageUpload Debug:", {
-		value,
-		imagesToShow,
-		canAddMore,
-		maxAllowed,
-		type
-	});
-
 	const commonWidgetOptions: CldUploadWidgetProps["options"] = {
 		cloudName,
 		uploadPreset,
 		multiple: !isSingle,
 		maxFiles: maxAllowed,
+		tags: [type],
+		clientAllowedFormats: ["jpg", "jpeg", "png", "gif", "webp", "svg"],
+		maxFileSize: 5000000, // 5MB
 	};
 
 	const addLabel =
@@ -125,78 +110,52 @@ const ImageUpload: FC<ImageUploadProps> = ({
 		return null;
 	}
 
-	// Struttura del componente per il tipo "profile"
-	if (type === "profile") {
-		const imageUrl = imagesToShow[0];
-		return (
-			<div className="relative w-52 h-52 mx-auto rounded-full bg-neutral-200 border-2 border-white shadow-2xl overflow-hidden">
-				{imageUrl ? (
-					<Image
-						src={imageUrl}
-						alt="Profile"
-						fill
-						className="object-cover rounded-full"
-						sizes="208px"
-					/>
-				) : (
-					<div className="w-full h-full flex items-center justify-center rounded-full bg-neutral-200">
-						<Upload className="h-10 w-10 text-muted-foreground" aria-hidden />
-					</div>
-				)}
-				<div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-300 bg-black/50">
-					<CldUploadWidget
-						onSuccess={handleUpload}
-						onError={handleError}
-						options={commonWidgetOptions}>
-						{({ open }) => (
-							<Button
-								type="button"
-								disabled={uploadBtnDisabled}
-								onClick={() => {
-									setIsUploading(true);
-									open();
-								}}
-								className="h-full rounded-full bg-transparent text-white hover:bg-transparent">
-								{isUploading && (
-									<Loader2 className="h-4 w-4 animate-spin mr-2" />
-								)}
-								{uploadBtnLabel}
-							</Button>
-						)}
-					</CldUploadWidget>
-				</div>
-			</div>
-		);
-	}
+	const baseImageClasses = "relative rounded-md overflow-hidden border";
 
-	// Struttura unificata per i tipi "standard" e "cover"
 	return (
-		<div className="flex flex-col gap-3">
+		<div className="flex flex-col gap-4">
 			{!dontShowPreview && (
 				<>
 					{imagesToShow.length === 0 ? (
 						<div
-							className={`relative w-full rounded-md border border-dashed text-muted-foreground flex items-center justify-center ${
-								type === "cover" ? "h-60" : "h-40"
-							}`}>
+							className={cn(
+								baseImageClasses,
+								"flex items-center justify-center text-muted-foreground border-dashed",
+								{
+									"h-60": type === "cover" || type === "standard",
+									"h-40 w-40 rounded-full mx-auto": type === "profile",
+									"h-24 w-40": type === "logo",
+								}
+							)}>
 							<div className="flex flex-col items-center gap-2 text-sm">
 								<Upload className="h-5 w-5" aria-hidden />
 								<span>Nessuna immagine</span>
 							</div>
 						</div>
 					) : (
-						<div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+						<div
+							className={cn({
+								"grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3":
+									!isSingle,
+								"w-full": isSingle,
+							})}>
 							{imagesToShow.map((url) => (
 								<div
 									key={url}
-									className={`relative w-full rounded-md overflow-hidden border ${
-										isSingle ? "h-60" : "h-24"
-									}`}>
+									className={cn(baseImageClasses, {
+										"h-60": isSingle && type !== "logo",
+										"h-24": !isSingle,
+										"h-24 w-40": isSingle && type === "logo",
+										"h-40 w-40 mx-auto rounded-full":
+											isSingle && type === "profile",
+									})}>
 									<Image
 										src={url}
-										alt="Upload"
+										alt="Anteprima immagine"
 										fill
-										className="object-cover"
+										className={cn("object-cover", {
+											"rounded-full": type === "profile",
+										})}
 										sizes={isSingle ? "100vw" : "96px"}
 									/>
 									<div className="absolute top-1 right-1">
@@ -216,6 +175,7 @@ const ImageUpload: FC<ImageUploadProps> = ({
 					)}
 				</>
 			)}
+
 			<div>
 				<CldUploadWidget
 					onSuccess={handleUpload}
@@ -230,9 +190,7 @@ const ImageUpload: FC<ImageUploadProps> = ({
 								open();
 							}}
 							className="flex items-center gap-2">
-							{isUploading && (
-								<Loader2 className="h-4 w-4 animate-spin mr-2" />
-							)}
+							{isUploading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
 							<Upload className="h-4 w-4" aria-hidden />
 							<span>{uploadBtnLabel}</span>
 							{!isSingle && (

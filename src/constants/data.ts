@@ -4,41 +4,84 @@ export const adminDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
 	{
 		label: "Dashboard",
 		icon: "dashboard",
-		link: "/dashboard/admin",
+		link: "",
 	},
 	{
 		label: "Negozi",
 		icon: "stores",
-		link: "/dashboard/admin/stores",
+		link: "stores",
 	},
 	{
 		label: "Ordini",
 		icon: "orders",
-		link: "/dashboard/admin/orders",
+		link: "orders",
 	},
 	{
 		label: "Categorie",
 		icon: "categories",
-		link: "/dashboard/admin/categories",
+		link: "categories",
 	},
 	{
 		label: "Sotto-categorie",
 		icon: "categories",
-		link: "/dashboard/admin/subCategories",
+		link: "subCategories",
 	},
 	{
 		label: "Coupon",
 		icon: "coupons",
-		link: "/dashboard/admin/coupons",
+		link: "coupons",
 	},
 	{
 		label: "Impostazioni",
 		icon: "settings",
-		link: "/dashboard/admin/settings",
+		link: "settings",
 	},
 	{
 		label: "Logout",
 		icon: "logout",
-		link: "/dashboard/admin/logout",
+		link: "logout",
+	},
+];
+
+export const sellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
+	{
+		label: "Dashboard",
+		icon: "dashboard",
+		link: "",
+	},
+	{
+		label: "Negozi",
+		icon: "stores",
+		link: "stores",
+	},
+	{
+		label: "Ordini",
+		icon: "orders",
+		link: "orders",
+	},
+	{
+		label: "Categorie",
+		icon: "categories",
+		link: "categories",
+	},
+	{
+		label: "Sotto-categorie",
+		icon: "categories",
+		link: "subCategories",
+	},
+	{
+		label: "Coupon",
+		icon: "coupons",
+		link: "coupons",
+	},
+	{
+		label: "Impostazioni",
+		icon: "settings",
+		link: "settings",
+	},
+	{
+		label: "Logout",
+		icon: "logout",
+		link: "logout",
 	},
 ];

@@ -3,10 +3,5 @@ export default function SellerDashboardLayout({
 }: {
 	children: React.ReactNode;
 }) {
-	return (
-		<div>
-			<h1>Seller Dashboard</h1>
-			{children}
-		</div>
-	);
+	return <>{children}</>;
 }

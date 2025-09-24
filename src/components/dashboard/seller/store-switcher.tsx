@@ -18,12 +18,11 @@ import {
 	CommandSeparator,
 } from "@/components/ui/command";
 import { useRouter, useParams } from "next/navigation";
-import { Store } from "@prisma/client";
 
 type PopoverTriggerProps = React.ComponentPropsWithRef<typeof PopoverTrigger>;
 
 interface StoreSwitcherProps extends PopoverTriggerProps {
-	stores: Store[];
+	stores: { name: string; slug: string }[];
 }
 
 const StoreSwitcher: FC<StoreSwitcherProps> = ({ stores, ...props }) => {

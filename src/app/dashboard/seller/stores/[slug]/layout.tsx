@@ -4,7 +4,7 @@ import Sidebar from "@/components/dashboard/shared/sidebar";
 import Header from "@/components/dashboard/shared/header";
 import { db } from "@/lib/db";
 
-export default async function SellerDashboardLayout({
+export default async function SellerStoreDashboardLayout({
 	children,
 }: {
 	children: React.ReactNode;
@@ -17,6 +17,11 @@ export default async function SellerDashboardLayout({
     const stores = await db.store.findMany({
         where: {
             userId: user.id,
+        },
+        select: {
+            id: true,
+            name: true,
+            slug: true,
         },
     });
 
