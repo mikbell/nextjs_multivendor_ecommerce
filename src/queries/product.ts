@@ -16,7 +16,7 @@ import {
 	VariantImageType,
 	VariantSimplified,
 } from "@/lib/types";
-import { FreeShipping, ProductVariant, Size, Store } from "@prisma/client";
+import { ProductVariant, ProductVariantSize, Store } from "@/generated/prisma";
 
 // Clerk
 import { currentUser } from "@clerk/nextjs/server";
@@ -434,7 +434,7 @@ export const deleteProduct = async (productId: string) => {
 //   - pageSize: The number of products per page (default = 10).
 // Returns: An object containing paginated products, filtered variants, and pagination metadata (totalPages, currentPage, pageSize, totalCount).
 export const getProducts = async (
-	filters: any = {},
+	filters: Record<string, any> = {},
 	sortBy = "",
 	page: number = 1,
 	pageSize: number = 10
@@ -445,47 +445,35 @@ export const getProducts = async (
 	const skip = (currentPage - 1) * limit;
 
 	// Construct the base query
-	const wherClause: any = {
+	const wherClause: Record<string, any> = {
 		AND: [],
 	};
 
 	// Apply store filter (using store URL)
 	if (filters.store) {
-		const store = await db.store.findUnique({
-			where: {
+		wherClause.AND.push({
+			store: {
 				url: filters.store,
 			},
-			select: { id: true },
 		});
-		if (store) {
-			wherClause.AND.push({ storeId: store.id });
-		}
 	}
 
 	// Apply category filter (using category URL)
 	if (filters.category) {
-		const category = await db.category.findUnique({
-			where: {
+		wherClause.AND.push({
+			category: {
 				url: filters.category,
 			},
-			select: { id: true },
 		});
-		if (category) {
-			wherClause.AND.push({ categoryId: category.id });
-		}
 	}
 
 	// Apply subCategory filter (using subCategory URL)
 	if (filters.subCategory) {
-		const subCategory = await db.subCategory.findUnique({
-			where: {
+		wherClause.AND.push({
+			subCategory: {
 				url: filters.subCategory,
 			},
-			select: { id: true },
 		});
-		if (subCategory) {
-			wherClause.AND.push({ subCategoryId: subCategory.id });
-		}
 	}
 
 	// Apply size filter (using array of sizes)
@@ -507,15 +495,11 @@ export const getProducts = async (
 
 	// Apply Offer filter (using offer URL)
 	if (filters.offer) {
-		const offer = await db.offerTag.findUnique({
-			where: {
+		wherClause.AND.push({
+			offerTag: {
 				url: filters.offer,
 			},
-			select: { id: true },
 		});
-		if (offer) {
-			wherClause.AND.push({ offerTagId: offer.id });
-		}
 	}
 
 	// Apply search filter (search term in product name or description)
@@ -541,7 +525,7 @@ export const getProducts = async (
 	}
 
 	// Define the sort order
-	let orderBy: Record<string, SortOrder> = {};
+	const orderBy: Record<string, any> = {};
 	switch (sortBy) {
 		case "most-popular":
 			orderBy = { views: "desc" };
@@ -551,6 +535,32 @@ export const getProducts = async (
 			break;
 		case "top-rated":
 			orderBy = { rating: "desc" };
+			break;
+		case "price-low-to-high":
+			orderBy = {
+				variants: {
+					_min: {
+						sizes: {
+							_min: {
+								price: "asc",
+							},
+						},
+					},
+				},
+			};
+			break;
+		case "price-high-to-low":
+			orderBy = {
+				variants: {
+					_min: {
+						sizes: {
+							_min: {
+								price: "desc",
+							},
+						},
+					},
+				},
+			};
 			break;
 		default:
 			orderBy = { views: "desc" };
@@ -563,6 +573,34 @@ export const getProducts = async (
 		take: limit, // Limit to page size
 		skip: skip, // Skip the products of previous pages
 		include: {
+			category: {
+				select: {
+					id: true,
+					name: true,
+					url: true,
+				},
+			},
+			subCategory: {
+				select: {
+					id: true,
+					name: true,
+					url: true,
+				},
+			},
+			store: {
+				select: {
+					id: true,
+					name: true,
+					url: true,
+				},
+			},
+			offerTag: {
+				select: {
+					id: true,
+					name: true,
+					url: true,
+				},
+			},
 			variants: {
 				include: {
 					sizes: true,
@@ -575,35 +613,34 @@ export const getProducts = async (
 
 	type VariantWithSizes = ProductVariant & { sizes: Size[] };
 
-	// Product price sorting
-	products.sort((a, b) => {
-		// Helper function to get the minimum price from a product's variants
-		const getMinPrice = (product: any) =>
-			Math.min(
-				...product.variants.flatMap((variant: VariantWithSizes) =>
-					variant.sizes.map((size) => {
-						let discount = size.discount;
-						let discountedPrice = size.price * (1 - discount / 100);
-						return discountedPrice;
-					})
-				),
-				Infinity // Default to Infinity if no sizes exist
-			);
+	if (sortBy === "price-low-to-high" || sortBy === "price-high-to-low") {
+		products.sort((a, b) => {
+			// Helper function to get the minimum price from a product's variants
+			const getMinPrice = (product: typeof products[0]) =>
+				Math.min(
+					...product.variants.flatMap((variant: VariantWithSizes) =>
+						variant.sizes.map((size) => {
+							const discount = size.discount || 0;
+							const discountedPrice = size.price * (1 - discount / 100);
+							return discountedPrice;
+						})
+					),
+					Infinity // Default to Infinity if no sizes exist
+				);
 
-		// Get minimum prices for both products
-		const minPriceA = getMinPrice(a);
-		const minPriceB = getMinPrice(b);
+			// Get minimum prices for both products
+			const minPriceA = getMinPrice(a);
+			const minPriceB = getMinPrice(b);
 
-		// Explicitly check for price sorting conditions
-		if (sortBy === "price-low-to-high") {
-			return minPriceA - minPriceB; // Ascending order
-		} else if (sortBy === "price-high-to-low") {
-			return minPriceB - minPriceA; // Descending order
-		}
+			if (sortBy === "price-low-to-high") {
+				return minPriceA - minPriceB; // Ascending order
+			} else if (sortBy === "price-high-to-low") {
+				return minPriceB - minPriceA; // Descending order
+			}
 
-		// If no price sort option is provided, return 0 (no sorting by price)
-		return 0;
-	});
+			return 0;
+		});
+	}
 
 	// Transform the products with filtered variants into ProductCardType structure
 	const productsWithFilteredVariants = products.map((product) => {
