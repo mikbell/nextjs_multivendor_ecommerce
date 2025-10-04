@@ -50,11 +50,11 @@ const StoreDetails: FC<StoreDetailsProps> = ({ data }) => {
 			phone: data?.phone ?? "",
 			slug: data?.slug ?? "",
 			featured: data?.featured ?? false,
-			returnPolicy: data?.returnPolicy ?? "",
-			defaultShippingService: data?.defaultShippingService ?? "",
+			returnPolicy: data?.returnPolicy ?? "Return in 30 days.",
+			defaultShippingService: data?.defaultShippingService ?? "International Delivery",
 			defaultShippingFee: data?.defaultShippingFee ?? 0,
-			defaultDeliveryTimeMin: data?.defaultDeliveryTimeMin ?? 0,
-			defaultDeliveryTimeMax: data?.defaultDeliveryTimeMax ?? 0,
+			defaultDeliveryTimeMin: data?.defaultDeliveryTimeMin ?? 7,
+			defaultDeliveryTimeMax: data?.defaultDeliveryTimeMax ?? 31,
 		}),
 		[data]
 	);
@@ -82,24 +82,31 @@ const StoreDetails: FC<StoreDetailsProps> = ({ data }) => {
 
 	const handleSubmit = async (values: z.infer<typeof StoreFormSchema>) => {
 		try {
-			const payload = {
-				id: data?.id ? data.id : uuid(),
-				name: values.name,
-				logo: values.logo,
-				cover: values.cover,
-				email: values.email,
-				phone: values.phone,
-				slug: values.slug,
-				description: values.description,
-				featured: values.featured,
-				returnPolicy: values.returnPolicy,
-				defaultShippingService: values.defaultShippingService,
-				defaultShippingFee: values.defaultShippingFee,
-				defaultDeliveryTimeMin: values.defaultDeliveryTimeMin,
-				defaultDeliveryTimeMax: values.defaultDeliveryTimeMax,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			};
+		const payload = {
+			id: data?.id ? data.id : uuid(),
+			name: values.name,
+			logo: values.logo,
+			cover: values.cover,
+			email: values.email,
+			phone: values.phone,
+			slug: values.slug,
+			url: values.slug, // Use slug as URL for now
+			description: values.description,
+			featured: values.featured || false,
+			status: "PENDING" as const,
+			averageRating: 0,
+			numReviews: 0,
+			returnPolicy: values.returnPolicy,
+			defaultShippingService: values.defaultShippingService,
+			defaultShippingFeePerItem: Number(values.defaultShippingFee) || 0,
+			defaultShippingFeeForAdditionalItem: 0,
+			defaultShippingFeePerKg: 0,
+			defaultShippingFeeFixed: 0,
+			defaultDeliveryTimeMin: Number(values.defaultDeliveryTimeMin) || 7,
+			defaultDeliveryTimeMax: Number(values.defaultDeliveryTimeMax) || 31,
+			createdAt: new Date(),
+			updatedAt: new Date(),
+		};
 			const res = await fetch("/api/stores/upsert", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
@@ -150,17 +157,9 @@ const StoreDetails: FC<StoreDetailsProps> = ({ data }) => {
 										<FormControl>
 											<ImageUpload
 												value={
-													Array.isArray(field.value)
-														? field.value
-														: field.value
-														? [field.value]
-														: []
+													field.value ? [field.value] : []
 												}
-												onChange={(val) =>
-													typeof val === "string"
-														? field.onChange(val)
-														: field.onChange(val[0] ?? "")
-												}
+												onChange={(urls) => field.onChange(urls[0] ?? "")}
 												onRemove={() => field.onChange("")}
 												type="logo"
 											/>
@@ -179,17 +178,9 @@ const StoreDetails: FC<StoreDetailsProps> = ({ data }) => {
 										<FormControl>
 											<ImageUpload
 												value={
-													Array.isArray(field.value)
-														? field.value
-														: field.value
-														? [field.value]
-														: []
+													field.value ? [field.value] : []
 												}
-												onChange={(val) =>
-													typeof val === "string"
-														? field.onChange(val)
-														: field.onChange(val[0] ?? "")
-												}
+												onChange={(urls) => field.onChange(urls[0] ?? "")}
 												onRemove={() => field.onChange("")}
 												type="cover"
 											/>

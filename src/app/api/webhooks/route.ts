@@ -1,33 +1,41 @@
 import { Webhook } from "svix";
-import { WebhookEvent } from "@clerk/nextjs/server";
-import { Role } from "@/generated/prisma";
+import { headers } from "next/headers";
+import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
+import { User } from "@prisma/client";
 import { db } from "@/lib/db";
-
 export async function POST(req: Request) {
-	const CLERK_WEBHOOK_SIGNING_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
+	// You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
+	const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
 
-	if (!CLERK_WEBHOOK_SIGNING_SECRET) {
+	if (!WEBHOOK_SECRET) {
 		throw new Error(
-			"Please add CLERK_WEBHOOK_SIGNING_SECRET from Clerk Dashboard to .env or .env.local"
+			"Please add WEBHOOK_SECRET from Clerk Dashboard to .env or .env.local"
 		);
 	}
 
-	const headerPayload = req.headers;
+	// Get the headers
+	const headerPayload = await headers();
 	const svix_id = headerPayload.get("svix-id");
 	const svix_timestamp = headerPayload.get("svix-timestamp");
 	const svix_signature = headerPayload.get("svix-signature");
 
+	// If there are no headers, error out
 	if (!svix_id || !svix_timestamp || !svix_signature) {
 		return new Response("Error occured -- no svix headers", {
 			status: 400,
 		});
 	}
 
+	// Get the body
 	const payload = await req.json();
 	const body = JSON.stringify(payload);
-	const wh = new Webhook(CLERK_WEBHOOK_SIGNING_SECRET);
+
+	// Create a new Svix instance with your secret.
+	const wh = new Webhook(WEBHOOK_SECRET);
+
 	let evt: WebhookEvent;
 
+	// Verify the payload with the headers
 	try {
 		evt = wh.verify(body, {
 			"svix-id": svix_id,
@@ -40,62 +48,56 @@ export async function POST(req: Request) {
 			status: 400,
 		});
 	}
-
-	// Quando un utente è creato o aggiornato
+	// When user is created or updated
 	if (evt.type === "user.created" || evt.type === "user.updated") {
-		const {
-			id,
-			email_addresses,
-			first_name,
-			last_name,
-			image_url,
-			private_metadata,
-		} = evt.data;
+		// Parse the incoming event data
+		const data = JSON.parse(body).data;
 
-		// 1. Leggi il ruolo dai privateMetadata, con un fallback a USER
-		const role = (private_metadata?.role as Role) || Role.USER;
+		// Create a user object with relevant properties
+		const user: Partial<User> = {
+			id: data.id,
+			name: `${data.first_name} ${data.last_name}`,
+			email: data.email_addresses[0].email_address,
+			picture: data.image_url,
+		};
+		// If user data is invalid, exit the function
+		if (!user) return;
 
-		const email = email_addresses?.[0]?.email_address;
-
-		if (!email) {
-			return new Response("Missing user email in webhook payload", {
-				status: 400,
-			});
-		}
-
-		// 2. Esegui l'upsert includendo il ruolo sia in 'create' che in 'update'
-		await db.user.upsert({
-			where: { email: email },
-			update: {
-				firstName: first_name ?? "",
-				lastName: last_name ?? "",
-				picture: image_url,
-				// Aggiungi il ruolo qui!
-				role: role,
+		// Upsert user in the database (update if exists, create if not)
+		const dbUser = await db.user.upsert({
+			where: {
+				email: user.email,
 			},
+			update: user,
 			create: {
-				id: id,
-				firstName: first_name ?? "",
-				lastName: last_name ?? "",
-				email: email,
-				picture: image_url,
-				// Usa il ruolo letto da Clerk
-				role: role,
+				id: user.id!,
+				name: user.name!,
+				email: user.email!,
+				picture: user.picture!,
+				role: user.role || "USER", // Default role to "USER" if not provided
+			},
+		});
+
+		// Update user's metadata in Clerk with the role information
+		await clerkClient.users.updateUserMetadata(data.id, {
+			privateMetadata: {
+				role: dbUser.role || "USER", // Default role to "USER" if not present in dbUser
 			},
 		});
 	}
 
-	// Quando un utente è eliminato (questo blocco era già corretto)
+	// When user is deleted
 	if (evt.type === "user.deleted") {
-		const { id } = evt.data;
-		if (id) {
-			await db.user.delete({
-				where: { id: id },
-			});
-		}
-	}
+		// Parse the incoming event data to get the user ID
+		const userId = JSON.parse(body).data.id;
 
-	// 3. La chiamata a updateUserMetadata è stata rimossa perché ridondante.
+		// Delete the user from the database based on the user ID
+		await db.user.delete({
+			where: {
+				id: userId,
+			},
+		});
+	}
 
 	return new Response("", { status: 200 });
 }

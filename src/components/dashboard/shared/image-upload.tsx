@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useEffect, useState } from "react";
+import { FC, useEffect, useState, useRef } from "react";
 import {
 	CldUploadWidget,
 	type CldUploadWidgetProps,
@@ -9,28 +9,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { Upload, Trash, Loader2 } from "lucide-react";
 import Image from "next/image";
-import { cn } from "@/lib/utils"; // Assumi che hai una utility 'cn'
+import { cn } from "@/lib/utils";
 
+// Tipizzazione migliorata: value e onChange usano SEMPRE string[]
 interface ImageUploadProps {
 	disabled?: boolean;
-	onChange: (value: string | string[]) => void;
+	onChange: (value: string[]) => void; // <-- Modificato a string[]
 	onRemove: (value: string) => void;
-	value: string[];
-	type: "standard" | "profile" | "cover" | "logo";
+	value: string[]; // <-- Mantenuto string[]
+	type: "standard" | "profile" | "cover" | "logo" | "productImage" | "productImages";
 	dontShowPreview?: boolean;
 	maxImages?: number;
+	multiple?: boolean;
 	uploadText?: string;
 	removeText?: string;
+	endpoint?: string;
 }
 
 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 if (!cloudName || !uploadPreset) {
+	console.error("Missing Cloudinary environment variables");
 	throw new Error(
-		"Manca una o più variabili d'ambiente di Cloudinary. Assicurati che NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME e NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET siano definiti nel tuo file .env.local."
+		"Configurazione Cloudinary mancante. Verifica le variabili d'ambiente."
 	);
 }
+
+type CloudinaryInfo = { secure_url: string };
 
 const ImageUpload: FC<ImageUploadProps> = ({
 	disabled,
@@ -45,27 +51,38 @@ const ImageUpload: FC<ImageUploadProps> = ({
 }) => {
 	const [isMounted, setIsMounted] = useState(false);
 	const [isUploading, setIsUploading] = useState(false);
+	const valuesRef = useRef<string[]>([]);
+
+	useEffect(() => {
+		valuesRef.current = Array.isArray(value) ? value : [];
+	}, [value]);
 
 	useEffect(() => {
 		setIsMounted(true);
 	}, []);
+
+	const maxAllowed =
+		maxImages ?? (["profile", "cover", "logo"].includes(type) ? 1 : 10);
+	const isSingle = maxAllowed === 1;
 
 	const handleUpload = (result: CloudinaryUploadWidgetResults) => {
 		if (
 			result.event === "success" &&
 			typeof result.info === "object" &&
 			result.info !== null &&
-			"secure_url" in result.info &&
-			typeof result.info.secure_url === "string"
+			"secure_url" in (result.info as Record<string, unknown>) &&
+			typeof (result.info as Record<string, unknown>)["secure_url"] === "string"
 		) {
-			const secureUrl = result.info.secure_url;
+			const secureUrl = (result.info as CloudinaryInfo).secure_url;
 			setIsUploading(false);
 
-			if (["profile", "cover", "logo"].includes(type) || maxImages === 1) {
-				onChange(secureUrl);
+			if (isSingle) {
+				onChange([secureUrl]);
 			} else {
-				const currentValues = Array.isArray(value) ? value : [];
-				onChange([...currentValues, secureUrl]);
+				const base = valuesRef.current || [];
+				const next = Array.from(new Set([...base, secureUrl])).slice(0, maxAllowed);
+				valuesRef.current = next;
+				onChange(next);
 			}
 		} else {
 			setIsUploading(false);
@@ -78,12 +95,9 @@ const ImageUpload: FC<ImageUploadProps> = ({
 		console.error("Cloudinary upload error:", error);
 	};
 
-	const maxAllowed =
-		maxImages ?? (["profile", "cover", "logo"].includes(type) ? 1 : 10);
-	const isSingle = maxAllowed === 1;
-	const imagesToShow = Array.isArray(value)
-		? value.filter((url) => typeof url === "string" && url.trim() !== "")
-		: [];
+	const imagesToShow = value.filter(
+		(url) => typeof url === "string" && url.trim() !== ""
+	);
 	const canAddMore = imagesToShow.length < maxAllowed;
 
 	const commonWidgetOptions: CldUploadWidgetProps["options"] = {
@@ -143,7 +157,7 @@ const ImageUpload: FC<ImageUploadProps> = ({
 								<div
 									key={url}
 									className={cn(baseImageClasses, {
-										"h-60": isSingle && type !== "logo",
+										"h-60": isSingle && type !== "logo" && type !== "profile",
 										"h-24": !isSingle,
 										"h-24 w-40": isSingle && type === "logo",
 										"h-40 w-40 mx-auto rounded-full":

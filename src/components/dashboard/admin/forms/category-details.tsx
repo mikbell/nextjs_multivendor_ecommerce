@@ -2,16 +2,12 @@
 
 import { Category } from "@/generated/prisma";
 import { CategoryFormSchema } from "@/lib/schemas";
-import { FC, useEffect, useMemo } from "react";
+import { apiClient } from "@/lib/api-client";
+import { handleFormError, showSuccessToast } from "@/lib/error-handler";
+import { FC, useEffect, useMemo, useState } from "react";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	Card,
-	CardContent,
-	CardTitle,
-	CardHeader,
-} from "@/components/ui/card";
 import {
 	Form,
 	FormField,
@@ -24,9 +20,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import ImageUpload from "@/components/dashboard/shared/image-upload";
+import { FormCard } from "@/components/dashboard/shared/form-card";
 import { v4 as uuid } from "uuid";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -35,7 +32,8 @@ interface CategoryDetailsProps {
 }
 
 const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
-	const router = useRouter(); // Initialize router here
+	const router = useRouter();
+	const [isLoading, setIsLoading] = useState(false);
 
 	const defaultValues = useMemo<Partial<z.input<typeof CategoryFormSchema>>>(
 		() => ({
@@ -57,38 +55,34 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 		defaultValues,
 	});
 
-	const isLoading = form.formState.isSubmitting;
+	const isFormLoading = form.formState.isSubmitting || isLoading;
 
 	const handleSubmit = async (values: z.infer<typeof CategoryFormSchema>) => {
+		setIsLoading(true);
 		try {
 			const payload = {
-				id: data?.id ? data.id : uuid(),
+				id: data?.id || uuid(),
 				name: values.name,
-				image: values.image[0].url,
+				image: values.image[0]?.url || '',
 				slug: values.slug,
 				description: values.description,
 				featured: values.featured,
 				createdAt: new Date(),
 				updatedAt: new Date(),
 			};
-			const res = await fetch("/api/categories/upsert", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(payload),
-			});
-			if (!res.ok) {
-				const data = await res.json().catch(() => ({}));
-				throw new Error(data?.error || "Errore durante il salvataggio.");
-			}
-			toast.success(data?.id ? "Modifica categoria" : "Nuova categoria", {
-				description: "Categoria salvata con successo.",
-			});
+
+			await apiClient.post("/api/categories/upsert", payload);
+
+			showSuccessToast(
+				data?.id ? "Categoria aggiornata" : "Categoria creata",
+				"Operazione completata con successo."
+			);
+
 			router.push("/dashboard/admin/categories");
 		} catch (error) {
-			console.log(error);
-			toast.error(data?.id ? "Modifica categoria" : "Nuova categoria", {
-				description: "Errore durante il salvataggio.",
-			});
+			handleFormError(error, "salvataggio categoria");
+		} finally {
+			setIsLoading(false);
 		}
 	};
 
@@ -99,52 +93,51 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 	}, [data, defaultValues, form]);
 
 	return (
-		<Card className="w-full">
-			<CardHeader>
-				<CardTitle>
-					{data?.id
-						? `Modifica categoria: ${data?.name}`
-						: "Nuova categoria"}
-				</CardTitle>
-			</CardHeader>
-			<CardContent>
-				<Form {...form}>
-					<form
-						onSubmit={form.handleSubmit(handleSubmit)}
-						className="space-y-10"
-						autoComplete="off"
-						suppressHydrationWarning>
-						<FormField
-							control={form.control}
-							name="image"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Immagine categoria</FormLabel>
-									<FormDescription>
-										Carica una sola immagine rappresentativa della categoria.
-									</FormDescription>
-									<FormControl>
-										<ImageUpload
-											type="standard"
-											maxImages={1}
-											uploadText="Carica immagine"
-											removeText="Rimuovi"
-											value={(field.value ?? []).map((image) => image.url)}
-											disabled={isLoading}
-											onChange={(url) => field.onChange([{ url }])}
-											onRemove={(url) =>
-												field.onChange(
-													(field.value ?? []).filter(
-														(image) => image.url !== url
-													)
+		<FormCard
+			title={data?.id ? `Modifica categoria: ${data.name}` : "Nuova categoria"}
+			description={data?.id ? "Aggiorna i dettagli della categoria" : "Crea una nuova categoria per organizzare i tuoi prodotti"}
+			loading={isFormLoading}
+		>
+			<Form {...form}>
+				<form
+					onSubmit={form.handleSubmit(handleSubmit)}
+					className="space-y-8"
+					autoComplete="off"
+					suppressHydrationWarning
+				>
+					<FormField
+						control={form.control}
+						name="image"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Immagine categoria</FormLabel>
+								<FormDescription>
+									Carica una sola immagine rappresentativa della categoria.
+								</FormDescription>
+								<FormControl>
+									<ImageUpload
+										type="standard"
+										maxImages={1}
+										uploadText="Carica immagine"
+										removeText="Rimuovi"
+										value={(field.value ?? []).map((image) => image.url)}
+										disabled={isFormLoading}
+										onChange={(urls) => field.onChange(urls.map(url => ({ url })))}
+										onRemove={(url) =>
+											field.onChange(
+												(field.value ?? []).filter(
+													(image) => image.url !== url
 												)
-											}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+											)
+										}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 						<FormField
 							control={form.control}
 							name="name"
@@ -155,12 +148,13 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 										Il nome verrà mostrato agli utenti e nei menu.
 									</FormDescription>
 									<FormControl>
-										<Input placeholder="Nome" {...field} />
+										<Input placeholder="Nome categoria" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
+
 						<FormField
 							control={form.control}
 							name="slug"
@@ -168,61 +162,86 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 								<FormItem>
 									<FormLabel>Slug categoria</FormLabel>
 									<FormDescription>
-										Inserisci lo slug (es. <code>t-shirt</code>). Niente spazi o
-										caratteri speciali.
+										Inserisci lo slug (es. <code>t-shirt</code>). Niente spazi o caratteri speciali.
 									</FormDescription>
 									<FormControl>
-										<Input placeholder="slug" {...field} />
+										<Input placeholder="slug-categoria" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>
 							)}
 						/>
-						<FormField
-							control={form.control}
-							name="description"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Descrizione categoria</FormLabel>
-									<FormDescription>
-										La descrizione verrà mostrata agli utenti.
-									</FormDescription>
-									<FormControl>
-										<Textarea placeholder="Descrizione" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-						<FormField
-							control={form.control}
-							name="featured"
-							render={({ field }) => (
-								<FormItem className="flex items-center gap-2">
-									<FormLabel>In evidenza</FormLabel>
-									<FormControl>
-										<Checkbox
-											checked={field.value}
-											onCheckedChange={(checked) =>
-												field.onChange(checked === true)
-											}
-											onBlur={field.onBlur}
-											name={field.name}
-											ref={field.ref}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+					</div>
 
-						<Button type="submit" disabled={isLoading}>
-							{isLoading ? "Salvataggio..." : "Salva"}
+					<FormField
+						control={form.control}
+						name="description"
+						render={({ field }) => (
+							<FormItem>
+								<FormLabel>Descrizione categoria</FormLabel>
+								<FormDescription>
+									La descrizione verrà mostrata agli utenti per spiegare il tipo di prodotti nella categoria.
+								</FormDescription>
+								<FormControl>
+									<Textarea
+										placeholder="Descrivi questa categoria..."
+										className="min-h-[100px]"
+										{...field}
+									/>
+								</FormControl>
+								<FormMessage />
+							</FormItem>
+						)}
+					/>
+
+					<FormField
+						control={form.control}
+						name="featured"
+						render={({ field }) => (
+							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+								<FormControl>
+									<Checkbox
+										checked={field.value}
+										onCheckedChange={(checked) =>
+											field.onChange(checked === true)
+										}
+										onBlur={field.onBlur}
+										name={field.name}
+										ref={field.ref}
+									/>
+								</FormControl>
+								<div className="space-y-1 leading-none">
+									<FormLabel>Categoria in evidenza</FormLabel>
+									<FormDescription>
+										Le categorie in evidenza vengono mostrate nella homepage e nelle sezioni principali.
+									</FormDescription>
+								</div>
+							</FormItem>
+						)}
+					/>
+
+					<Separator className="my-6" />
+
+					<div className="flex justify-end gap-3">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => router.back()}
+							disabled={isFormLoading}
+						>
+							Annulla
 						</Button>
-					</form>
-				</Form>
-			</CardContent>
-		</Card>
+						<Button
+							type="submit"
+							disabled={isFormLoading}
+							size="default"
+						>
+							{isFormLoading ? "Salvataggio..." : "Salva categoria"}
+						</Button>
+					</div>
+				</form>
+			</Form>
+		</FormCard>
 	);
 };
 

@@ -18,5 +18,5 @@ export default async function SellerDashboardPage() {
 		return redirect("/dashboard/seller/stores/new");
 	}
 
-	return redirect(`/dashboard/seller/stores/${stores[0].slug}`);
+	return redirect(`/dashboard/seller/stores/${stores[0]?.slug}`);
 }

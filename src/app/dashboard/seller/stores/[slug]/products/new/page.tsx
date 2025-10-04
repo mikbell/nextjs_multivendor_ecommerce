@@ -18,6 +18,15 @@ export default async function SellerNewProductPage({
 		},
 	});
 	const subcategories = await getAllSubCategories();
-	
-	return <ProductDetails stores={stores} categories={categories} subcategories={subcategories} />;
+
+	return (
+		<div className="max-w-6xl mx-auto py-4">
+			<ProductDetails
+				stores={stores}
+				categories={categories}
+				subcategories={subcategories}
+			/>
+			;
+		</div>
+	);
 }

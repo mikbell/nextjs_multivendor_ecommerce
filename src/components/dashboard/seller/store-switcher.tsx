@@ -22,7 +22,7 @@ import { useRouter, useParams } from "next/navigation";
 type PopoverTriggerProps = React.ComponentPropsWithRef<typeof PopoverTrigger>;
 
 interface StoreSwitcherProps extends PopoverTriggerProps {
-	stores: { name: string; slug: string }[];
+	stores: { name: string; url: string }[];
 }
 
 const StoreSwitcher: FC<StoreSwitcherProps> = ({ stores, ...props }) => {
@@ -31,12 +31,12 @@ const StoreSwitcher: FC<StoreSwitcherProps> = ({ stores, ...props }) => {
 
 	const formattedItems = stores.map((store) => ({
 		label: store.name,
-		value: store.slug,
+		value: store.url,
 	}));
 
 	const [open, setOpen] = useState(false);
 
-	const activeStore = stores.find((store) => store.slug === params.slug);
+	const activeStore = stores.find((store) => store.url === params.url);
 
 	const onStoreSelect = (store: { label: string; value: string }) => {
 		setOpen(false);
@@ -65,7 +65,7 @@ const StoreSwitcher: FC<StoreSwitcherProps> = ({ stores, ...props }) => {
 									onSelect={() => onStoreSelect(store)}>
 									<StoreIcon className="mr-2 h-4 w-4" />
 									{store.label}
-									{activeStore?.slug === store.value && (
+									{activeStore?.url === store.value && (
 										<CheckIcon className="ml-auto h-4 w-4" />
 									)}
 								</CommandItem>

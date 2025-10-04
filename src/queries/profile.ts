@@ -496,7 +496,7 @@ export const getUserFollowedStores = async (
 	// Transform the stores into the required format
 	const stores = followedStores.map((store) => ({
 		id: store.id,
-		url: store.slug,
+		url: store.url,
 		name: store.name,
 		logo: store.logo,
 		followersCount: store.followers.length,
