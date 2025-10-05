@@ -122,29 +122,6 @@ const ProductDetails: FC<ProductDetailsProps> = ({
 
 	// Is new variant page - only if we have BOTH productId and name (existing product) but no variantId
 	const isNewVariantPage = data?.productId && data?.name && !data?.variantId;
-	
-	// Debug: Force show all fields for debugging
-	const debugForceShowAllFields = true;
-	
-	// Debug: log the values
-	console.log("Debug - Form render:", {
-		isNewVariantPage,
-		data: data ? { productId: data.productId, variantId: data.variantId, name: data.name } : 'No data'
-	});
-	
-	// Alert for debugging
-	alert(`isNewVariantPage: ${isNewVariantPage}, debugForceShowAllFields: ${debugForceShowAllFields}`);
-	
-	// Debug: Log current form values
-	useEffect(() => {
-		const currentValues = form.getValues();
-		console.log("Debug - Current form values:", {
-			name: currentValues.name,
-			variantName: currentValues.variantName,
-			brand: currentValues.brand,
-			description: currentValues.description
-		});
-	}, []);
 
 	// State for subCategories
 	const [subCategories, setSubCategories] = useState<subcategory[]>([]);
@@ -758,19 +735,21 @@ const ProductDetails: FC<ProductDetailsProps> = ({
 									Informazioni tecniche del prodotto. Lo SKU deve essere unico.
 								</FormDescription>
 								<div className="flex flex-col lg:flex-row gap-4">
-										<FormField
-											disabled={isLoading}
-											control={form.control}
-											name="brand"
-											render={({ field }) => (
-												<FormItem className="flex-1">
-													<FormControl>
-													<Input placeholder="es. Nike, Adidas, Zara" {...field} />
-													</FormControl>
-													<FormMessage />
-												</FormItem>
+										{!isNewVariantPage && (
+											<FormField
+												disabled={isLoading}
+												control={form.control}
+												name="brand"
+												render={({ field }) => (
+													<FormItem className="flex-1">
+														<FormControl>
+														<Input placeholder="es. Nike, Adidas, Zara" {...field} />
+														</FormControl>
+														<FormMessage />
+													</FormItem>
+											)}
+										/>
 										)}
-									/>
 									<FormField
 										disabled={isLoading}
 										control={form.control}
