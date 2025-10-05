@@ -1,5 +1,4 @@
 import { getAllSubCategories } from "@/queries/subCategory";
-import { getAllCategories } from "@/queries/category";
 import { columns } from "@/components/dashboard/admin/subCategories/columns";
 import { DataTable } from "@/components/ui/data-table";
 import { PageHeader } from "@/components/dashboard/shared/page-header";
@@ -9,8 +8,6 @@ import { Button } from "@/components/ui/button";
 
 export default async function AdminSubCategoriesPage() {
 	const subCategories = (await getAllSubCategories()) ?? [];
-
-	const categories = (await getAllCategories()) ?? [];
 
 	return (
 		<div className="space-y-6">

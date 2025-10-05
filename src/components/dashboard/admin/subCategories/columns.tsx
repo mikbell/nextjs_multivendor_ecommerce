@@ -21,13 +21,13 @@ function ActionsCell({ id }: { id: string }) {
 	const [deleting, setDeleting] = useState(false);
 
 	const onEdit = () => {
-		router.push(`/dashboard/admin/categories/${id}`);
+		router.push(`/dashboard/admin/subCategories/${id}`);
 	};
 
 	const onDelete = async () => {
 		try {
 			setDeleting(true);
-			const res = await fetch(`/api/categories/${id}`, {
+			const res = await fetch(`/api/subCategories/${id}`, {
 				method: "DELETE",
 			});
 			if (!res.ok) {

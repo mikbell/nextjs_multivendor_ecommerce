@@ -82,6 +82,7 @@ export const upsertStore = async (store: Store) => {
 				email: user.emailAddresses[0]?.emailAddress || "",
 				picture: user.imageUrl || "",
 				role: (user.privateMetadata?.role as "USER" | "ADMIN" | "SELLER") || "USER",
+				updatedAt: new Date(),
 			},
 			create: {
 				id: user.id,
@@ -89,22 +90,23 @@ export const upsertStore = async (store: Store) => {
 				email: user.emailAddresses[0]?.emailAddress || "",
 				picture: user.imageUrl || "",
 				role: (user.privateMetadata?.role as "USER" | "ADMIN" | "SELLER") || "USER",
+				updatedAt: new Date(),
 			},
 		});
 
 		// Upsert store details into the database
-		// Do not spread relational foreign keys like userId into create payload when also connecting relations
-		const { userId: _omitUserId, ...storeData } = store;
 		const storeDetails = await db.store.upsert({
 			where: {
 				id: store.id,
 			},
-			update: store,
+			update: {
+				...store,
+				updatedAt: new Date(),
+			},
 			create: {
-				...storeData,
-				user: {
-					connect: { id: user.id },
-				},
+				...store,
+				userId: user.id, // Explicitly add userId for create operation
+				updatedAt: new Date(),
 			},
 		});
 

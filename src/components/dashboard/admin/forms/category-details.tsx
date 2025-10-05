@@ -1,6 +1,11 @@
 "use client";
 
 import { Category } from "@/generated/prisma";
+
+// Temporary interface to extend Category with url field until Prisma client is regenerated
+interface CategoryWithUrl extends Category {
+	url: string;
+}
 import { CategoryFormSchema } from "@/lib/schemas";
 import { apiClient } from "@/lib/api-client";
 import { handleFormError, showSuccessToast } from "@/lib/error-handler";
@@ -28,7 +33,7 @@ import { useRouter } from "next/navigation";
 import { Textarea } from "@/components/ui/textarea";
 
 interface CategoryDetailsProps {
-	data?: Category;
+	data?: CategoryWithUrl;
 }
 
 const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
@@ -41,6 +46,7 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 			description: data?.description ?? "",
 			image: data?.image ? [{ url: data.image }] : [],
 			slug: data?.slug ?? "",
+			url: data?.url ?? "",
 			featured: data?.featured ?? false,
 		}),
 		[data]
@@ -60,16 +66,25 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 	const handleSubmit = async (values: z.infer<typeof CategoryFormSchema>) => {
 		setIsLoading(true);
 		try {
-			const payload = {
-				id: data?.id || uuid(),
-				name: values.name,
-				image: values.image[0]?.url || '',
-				slug: values.slug,
-				description: values.description,
-				featured: values.featured,
-				createdAt: new Date(),
-				updatedAt: new Date(),
-			};
+		const payload: any = {
+			name: values.name,
+			image: values.image || [], // Assicura che sia sempre un array
+			slug: values.slug,
+			url: values.url,
+			description: values.description,
+			featured: values.featured,
+		};
+		
+		// Aggiungi ID solo se stiamo modificando una categoria esistente
+		if (data?.id) {
+			payload.id = data.id;
+		}
+		
+		// Aggiungi timestamp solo per nuove categorie (il server gestirà quelli per gli update)
+		if (!data?.id) {
+			payload.createdAt = new Date();
+			payload.updatedAt = new Date();
+		}
 
 			await apiClient.post("/api/categories/upsert", payload);
 
@@ -137,7 +152,7 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 						)}
 					/>
 
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
 						<FormField
 							control={form.control}
 							name="name"
@@ -166,6 +181,23 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 									</FormDescription>
 									<FormControl>
 										<Input placeholder="slug-categoria" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+
+						<FormField
+							control={form.control}
+							name="url"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>URL categoria</FormLabel>
+									<FormDescription>
+										URL identificativo per la categoria (es. <code>maglie</code>).
+									</FormDescription>
+									<FormControl>
+										<Input placeholder="url-categoria" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>

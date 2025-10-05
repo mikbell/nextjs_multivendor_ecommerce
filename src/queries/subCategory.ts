@@ -20,7 +20,7 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
 			throw new Error("Dati sotto-categoria non forniti.");
 		}
 
-		const existingSubCategory = await db.subCategory.findFirst({
+		const existingSubCategory = await db.subcategory.findFirst({
 			where: {
 				AND: [
 					{
@@ -47,7 +47,7 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
 			throw new Error(errorMessage);
 		}
 
-		const subCategoryDetails = await db.subCategory.upsert({
+		const subCategoryDetails = await db.subcategory.upsert({
 			where: {
 				id: subCategory.id,
 			},
@@ -63,15 +63,30 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
 
 export const getAllSubCategories = async () => {
 	try {
-		const subCategories = await db.subCategory.findMany({
-			include: {
-				category: true,
-			},
-			orderBy: {
-				name: "asc",
-			},
+		const [subCategories, categories] = await Promise.all([
+			db.subcategory.findMany({
+				orderBy: {
+					name: "asc",
+				},
+			}),
+			db.category.findMany({
+				select: {
+					id: true,
+					name: true,
+				},
+			}),
+		]);
+
+		// Manually join subcategories with categories
+		const subCategoriesWithCategory = subCategories.map(subCategory => {
+			const category = categories.find(cat => cat.id === subCategory.categoryId);
+			return {
+				...subCategory,
+				category: category || { id: subCategory.categoryId, name: "Categoria non trovata" },
+			};
 		});
-		return subCategories;
+
+		return subCategoriesWithCategory;
 	} catch (error) {
 		console.log(error);
 		// Ensure a consistent return type (never undefined)
@@ -82,7 +97,7 @@ export const getAllSubCategories = async () => {
 export const getSubCategoryById = async (id: string) => {
 	try {
 		if (!id) throw new Error("ID categoria mancante");
-		const subCategory = await db.subCategory.findUnique({
+		const subCategory = await db.subcategory.findUnique({
 			where: { id },
 		});
 		return subCategory || null;

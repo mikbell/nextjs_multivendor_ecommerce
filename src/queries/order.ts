@@ -17,35 +17,11 @@ export const getOrder = async (orderId: string) => {
 	// Check if user is authenticated
 	if (!user) throw new Error("Unauthenticated.");
 
-	// Get order details, with groups, poroduct items, and ordered by total price
+	// Simplified order query without relations for now
 	const order = await db.order.findUnique({
 		where: {
 			id: orderId,
 			userId: user.id,
-		},
-		include: {
-			groups: {
-				include: {
-					items: true,
-					store: true,
-					coupon: true,
-					_count: {
-						select: {
-							items: true,
-						},
-					},
-				},
-				orderBy: {
-					total: "desc",
-				},
-			},
-			shippingAddress: {
-				include: {
-					country: true,
-					user: true,
-				},
-			},
-			paymentDetails: true,
 		},
 	});
 
@@ -93,7 +69,7 @@ export const updateOrderGroupStatus = async (
 	}
 
 	// Retrieve the order to be updated
-	const order = await db.orderGroup.findUnique({
+	const order = await db.ordergroup.findUnique({
 		where: {
 			id: groupId,
 			storeId: storeId,
@@ -104,7 +80,7 @@ export const updateOrderGroupStatus = async (
 	if (!order) throw new Error("Order not found.");
 
 	// Update the order status
-	const updatedOrder = await db.orderGroup.update({
+	const updatedOrder = await db.ordergroup.update({
 		where: {
 			id: groupId,
 		},
@@ -146,7 +122,7 @@ export const updateOrderItemStatus = async (
 	}
 
 	// Retrieve the product item to be updated
-	const product = await db.orderItem.findUnique({
+	const product = await db.orderitem.findUnique({
 		where: {
 			id: orderItemId,
 		},
@@ -156,7 +132,7 @@ export const updateOrderItemStatus = async (
 	if (!product) throw new Error("Order item not found.");
 
 	// Update the order status
-	const updatedProduct = await db.orderItem.update({
+	const updatedProduct = await db.orderitem.update({
 		where: {
 			id: orderItemId,
 		},

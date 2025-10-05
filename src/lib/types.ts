@@ -14,27 +14,27 @@ import {
 } from "@/queries/store";
 import { getAllSubCategories } from "@/queries/subCategory";
 import {
-	Cart,
-	CartItem,
-	Color,
-	FreeShipping,
-	FreeShippingCountry,
+	cart as Cart,
+	cartitem as CartItem,
+	color as Color,
+	freeshipping as FreeShipping,
+	freeshippingcountry as FreeShippingCountry,
 	Prisma,
-	ProductVariantImage,
-	Review,
-	ReviewImage,
-	ShippingAddress,
-	ShippingRate,
-	Size,
-	User,
-	Country as CountryPrisma,
-	Coupon,
-	Store,
-	OrderGroup,
-	OrderItem,
-	Category,
-	SubCategory,
-	ShippingFeeMethod,
+	productvariantimage as ProductVariantImage,
+	review as Review,
+	reviewimage as ReviewImage,
+	shippingaddress as ShippingAddress,
+	shippingrate as ShippingRate,
+	size as Size,
+	user as User,
+	country as CountryPrisma,
+	coupon as Coupon,
+	store as Store,
+	ordergroup as OrderGroup,
+	orderitem as OrderItem,
+	category as Category,
+	subcategory as SubCategory,
+	product_shippingFeeMethod,
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 import { getOrder } from "@/queries/order";
@@ -89,7 +89,7 @@ export type ProductWithVariantType = {
 	questions: { id?: string; question: string; answer: string }[];
 	freeShippingForAllCountries: boolean;
 	freeShippingCountriesIds: { id?: string; label: string; value: string }[];
-	shippingFeeMethod: ShippingFeeMethod;
+	shippingFeeMethod: product_shippingFeeMethod;
 	createdAt: Date;
 	updatedAt: Date;
 };

@@ -7,7 +7,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
 
 // Prisma model
-import { Category } from "@prisma/client";
+import { category as Category } from "@prisma/client";
 
 // Function: upsertCategory
 // Description: Upserts a category into the database, updating if it exists or creating a new one if not.
@@ -97,19 +97,9 @@ export const getAllCategories = async (storeUrl?: string) => {
 	}
 
 	// Retrieve all categories from the database
+	// Note: Since there's no direct relation between category and product in the schema,
+	// we'll get all categories for now
 	const categories = await db.category.findMany({
-		where: storeId
-			? {
-					products: {
-						some: {
-							storeId: storeId,
-						},
-					},
-			  }
-			: {},
-		include: {
-			subCategories: true,
-		},
 		orderBy: {
 			updatedAt: "desc",
 		},
@@ -123,7 +113,7 @@ export const getAllCategories = async (storeUrl?: string) => {
 // Returns: Array of subCategories of category sorted by updatedAt date in descending order.
 export const getAllCategoriesForCategory = async (categoryId: string) => {
 	// Retrieve all subcategories of category from the database
-	const subCategories = await db.subCategory.findMany({
+	const subCategories = await db.subcategory.findMany({
 		where: {
 			categoryId,
 		},

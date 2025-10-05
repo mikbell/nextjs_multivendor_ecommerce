@@ -7,11 +7,12 @@ import * as z from "zod";
 export default async function SellerStoreSettingsPage({
 	params,
 }: {
-	params: { slug: string };
+	params: Promise<{ slug: string }>;
 }) {
+	const { slug } = await params;
 	const storeDetails = await db.store.findUnique({
 		where: {
-			slug: params.slug,
+			slug: slug,
 		},
 	});
 	if (!storeDetails) {
@@ -30,7 +31,7 @@ export default async function SellerStoreSettingsPage({
 		featured: storeDetails.featured ?? undefined,
 		returnPolicy: storeDetails.returnPolicy ?? undefined,
 		defaultShippingService: storeDetails.defaultShippingService ?? undefined,
-		defaultShippingFee: storeDetails.defaultShippingFee ?? undefined,
+		defaultShippingFee: storeDetails.defaultShippingFeePerKg ?? undefined,
 		defaultDeliveryTimeMin: storeDetails.defaultDeliveryTimeMin ?? undefined,
 		defaultDeliveryTimeMax: storeDetails.defaultDeliveryTimeMax ?? undefined,
 	};

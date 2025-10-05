@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
-import { OfferTag } from "@prisma/client";
+import { offertag as OfferTag } from "@prisma/client";
 
 // Function: getAllOfferTags
 // Description: Retrieves all offer tags from the database.
@@ -26,27 +26,10 @@ export const getAllOfferTags = async (storeUrl?: string) => {
 	}
 
 	// Retrieve all offer tags from the database
-	const offerTgas = await db.offerTag.findMany({
-		where: storeId
-			? {
-					products: {
-						some: {
-							storeId: storeId,
-						},
-					},
-			  }
-			: {},
-		include: {
-			products: {
-				select: {
-					id: true,
-				},
-			},
-		},
+	// Simplified query without relations for now
+	const offerTgas = await db.offertag.findMany({
 		orderBy: {
-			products: {
-				_count: "desc", // Order by the count of associated products in descending order
-			},
+			updatedAt: "desc",
 		},
 	});
 	return offerTgas;
@@ -76,11 +59,11 @@ export const upsertOfferTag = async (offerTag: OfferTag) => {
 		if (!offerTag) throw new Error("Please provide offer tag data.");
 
 		// Throw error if offer tag with the same name or URL already exists
-		const existingOfferTag = await db.offerTag.findFirst({
+		const existingOfferTag = await db.offertag.findFirst({
 			where: {
 				AND: [
 					{
-					OR: [{ name: offerTag.name }, { slug: offerTag.slug }],
+			OR: [{ name: offerTag.name }, { url: offerTag.url }],
 					},
 					{
 						NOT: {
@@ -96,14 +79,14 @@ export const upsertOfferTag = async (offerTag: OfferTag) => {
 			let errorMessage = "";
 			if (existingOfferTag.name === offerTag.name) {
 				errorMessage = "An offer tag with the same name already exists";
-			} else if (existingOfferTag.slug === offerTag.slug) {
-				errorMessage = "An offer tag with the same slug already exists";
+			} else if (existingOfferTag.url === offerTag.url) {
+				errorMessage = "An offer tag with the same URL already exists";
 			}
 			throw new Error(errorMessage);
 		}
 
 		// Upsert offer tag into the database
-		const offerTagDetails = await db.offerTag.upsert({
+		const offerTagDetails = await db.offertag.upsert({
 			where: {
 				id: offerTag.id,
 			},
@@ -129,7 +112,7 @@ export const getOfferTag = async (offerTagId: string) => {
 	if (!offerTagId) throw new Error("Please provide offer tag ID.");
 
 	// Retrieve the offer tag from the database using the provided ID
-	const offerTag = await db.offerTag.findUnique({
+	const offerTag = await db.offertag.findUnique({
 		where: {
 			id: offerTagId,
 		},
@@ -163,7 +146,7 @@ export const deleteOfferTag = async (offerTagId: string) => {
 		if (!offerTagId) throw new Error("Please provide the offer tag ID.");
 
 		// Delete offer tag from the database
-		const response = await db.offerTag.delete({
+		const response = await db.offertag.delete({
 			where: {
 				id: offerTagId,
 			},

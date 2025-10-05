@@ -16,7 +16,7 @@ import {
 	VariantImageType,
 	VariantSimplified,
 } from "@/lib/types";
-import { FreeShipping, ProductVariant, Size, Store } from "@prisma/client";
+import { freeshipping as FreeShipping, productvariant as ProductVariant, size as Size, store as Store } from "@prisma/client";
 
 // Clerk
 import { currentUser } from "@clerk/nextjs/server";
@@ -58,10 +58,28 @@ export const upsertProduct = async (
 		if (!product) throw new Error("Please provide product data.");
 
 		// Find the store by URL
+		
 		const store = await db.store.findUnique({
 			where: { url: storeUrl, userId: user.id },
 		});
-		if (!store) throw new Error("Store not found.");
+		
+		
+		if (!store) {
+			// Let's also check if the store exists with a different user
+			const storeWithDifferentUser = await db.store.findUnique({
+				where: { url: storeUrl },
+			});
+			console.log("Debug - Store with different user:", storeWithDifferentUser);
+			
+			// List all stores for this user
+			const userStores = await db.store.findMany({
+				where: { userId: user.id },
+				select: { id: true, name: true, url: true, slug: true },
+			});
+			console.log("Debug - All user stores:", userStores);
+			
+			throw new Error(`Store not found. StoreUrl: ${storeUrl}, UserId: ${user.id}`);
+		}
 
 		// Check if the product already exists
 		const existingProduct = await db.product.findUnique({
@@ -69,7 +87,7 @@ export const upsertProduct = async (
 		});
 
 		// Check if the variant already exists
-		const existingVariant = await db.productVariant.findUnique({
+		const existingVariant = await db.productvariant.findUnique({
 			where: { id: product.variantId },
 		});
 
@@ -94,15 +112,20 @@ const handleProductCreate = async (
 	product: ProductWithVariantType,
 	storeId: string
 ) => {
-	// Generate unique slugs for product and variant
-	const productSlug = await generateUniqueSlug(
-		slugify(product.name, {
-			replacement: "-",
-			lower: true,
-			trim: true,
-		}),
-		"product"
-	);
+		// Validate required fields
+		if (!product.name || !product.variantName || !product.brand || !product.description) {
+			throw new Error(`Missing required fields: name=${!!product.name}, variantName=${!!product.variantName}, brand=${!!product.brand}, description=${!!product.description}`);
+		}
+		
+		// Generate unique slugs for product and variant
+		const productSlug = await generateUniqueSlug(
+			slugify(product.name, {
+				replacement: "-",
+				lower: true,
+				trim: true,
+			}),
+			"product"
+		);
 
 	const variantSlug = await generateUniqueSlug(
 		slugify(product.variantName, {
@@ -110,7 +133,7 @@ const handleProductCreate = async (
 			lower: true,
 			trim: true,
 		}),
-		"productVariant"
+		"productvariant"
 	);
 
 	const productData = {
@@ -208,7 +231,7 @@ const handleCreateVariant = async (product: ProductWithVariantType) => {
 			lower: true,
 			trim: true,
 		}),
-		"productVariant"
+		"productvariant"
 	);
 
 	const variantData = {
@@ -251,7 +274,7 @@ const handleCreateVariant = async (product: ProductWithVariantType) => {
 		updatedAt: product.updatedAt,
 	};
 
-	const new_variant = await db.productVariant.create({ data: variantData });
+	const new_variant = await db.productvariant.create({ data: variantData });
 	return new_variant;
 };
 
@@ -297,23 +320,24 @@ export const getProductVariant = async (
 			},
 		},
 	});
-	if (!product) return;
+	if (!product || !product.variants || product.variants.length === 0) return;
+	const variant = product.variants[0]!; // Non-null assertion since we checked length above
 	return {
 		productId: product?.id,
-		variantId: product?.variants[0].id,
+		variantId: variant.id,
 		name: product.name,
 		description: product?.description,
-		variantName: product.variants[0].variantName,
-		variantDescription: product.variants[0].variantDescription,
-		images: product.variants[0].images,
+		variantName: variant.variantName,
+		variantDescription: variant.variantDescription,
+		images: variant.images,
 		categoryId: product.categoryId,
 		subCategoryId: product.subCategoryId,
-		isSale: product.variants[0].isSale,
+		isSale: variant.isSale,
 		brand: product.brand,
-		sku: product.variants[0].sku,
-		colors: product.variants[0].colors,
-		sizes: product.variants[0].sizes,
-		keywords: product.variants[0].keywords.split(","),
+		sku: variant.sku,
+		colors: variant.colors,
+		sizes: variant.sizes,
+		keywords: variant.keywords.split(","),
 	};
 };
 
@@ -477,7 +501,7 @@ export const getProducts = async (
 
 	// Apply subCategory filter (using subCategory URL)
 	if (filters.subCategory) {
-		const subCategory = await db.subCategory.findUnique({
+		const subCategory = await db.subcategory.findUnique({
 			where: {
 				url: filters.subCategory,
 			},
@@ -622,10 +646,10 @@ export const getProducts = async (
 		// Extract variant images for the product
 		const variantImages: VariantImageType[] = filteredVariants.map(
 			(variant) => ({
-				url: `/product/${product.slug}/${variant.slug}`,
-				image: variant.variantImage
-					? variant.variantImage
-					: variant.images[0].url,
+			url: `/product/${product.slug}/${variant.slug}`,
+			image: variant.variantImage
+				? variant.variantImage
+				: variant.images?.[0]?.url || '',
 			})
 		);
 
@@ -682,7 +706,7 @@ export const getProductPageData = async (
 	if (!product) return;
 
 	// Retrieve user country
-	const userCountry = getUserCountry();
+	const userCountry = await getUserCountry();
 
 	// Calculate and retrieve the shipping details
 	const productShippingDetails = await getShippingDetails(
@@ -762,7 +786,7 @@ export const retrieveProductDetails = async (
 
 	if (!product) return null;
 	// Get variants info
-	const variantsInfo = await db.productVariant.findMany({
+	const variantsInfo = await db.productvariant.findMany({
 		where: {
 			productId: product.id,
 		},
@@ -790,12 +814,12 @@ export const retrieveProductDetails = async (
 	};
 };
 
-const getUserCountry = () => {
-	const userCountryCookie = getCookie("userCountry", { cookies }) || "";
+const getUserCountry = async () => {
+	const userCountryCookie = (await getCookie("userCountry", { cookies })) || "";
 	const defaultCountry = { name: "United States", code: "US" };
 
 	try {
-		const parsedCountry = JSON.parse(userCountryCookie);
+		const parsedCountry = JSON.parse(userCountryCookie as string);
 		if (
 			parsedCountry &&
 			typeof parsedCountry === "object" &&
@@ -817,8 +841,8 @@ const formatProductResponse = (
 	isUserFollowingStore: boolean,
 	ratingStatistics: RatingStatisticsType
 ) => {
-	if (!product) return;
-	const variant = product.variants[0];
+	if (!product || !product.variants || product.variants.length === 0) return;
+	const variant = product.variants[0]!; // Non-null assertion since we checked length above
 	const { store, category, subCategory, offerTag, questions, reviews } =
 		product;
 	const { images, colors, sizes } = variant;
@@ -1278,7 +1302,7 @@ export const getProductsByIds = async (
 
 	try {
 		// Query the database for products with the specified ids
-		const variants = await db.productVariant.findMany({
+		const variants = await db.productvariant.findMany({
 			where: {
 				id: {
 					in: ids, // Filter products whose idds are in the provided array
@@ -1329,11 +1353,11 @@ export const getProductsByIds = async (
 		// Return products sorted in the order of ids provided
 		const ordered_products = ids
 			.map((id) =>
-				new_products.find((product) => product.variants[0].variantId === id)
+				new_products.find((product) => product.variants?.[0]?.variantId === id)
 			)
 			.filter(Boolean); // Filter out undefined values
 
-		const allProducts = await db.productVariant.count({
+		const allProducts = await db.productvariant.count({
 			where: {
 				id: {
 					in: ids,

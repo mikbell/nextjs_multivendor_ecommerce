@@ -105,7 +105,7 @@ export const capturePayPalPayment = async (
   }
 
   // Upsert payment details record
-  const newPaymentDetails = await db.paymentDetails.upsert({
+  const newPaymentDetails = await db.paymentdetails.upsert({
     where: {
       orderId,
     },
@@ -122,6 +122,7 @@ export const capturePayPalPayment = async (
       userId: user.id,
     },
     create: {
+      id: require('uuid').v4(),
       paymentInetntId: paymentId,
       status:
         captureData.status === "COMPLETED" ? "Completed" : captureData.status,
@@ -133,10 +134,11 @@ export const capturePayPalPayment = async (
       paymentMethod: "Paypal",
       orderId: orderId,
       userId: user.id,
+      updatedAt: new Date(),
     },
   });
 
-  // Update the order with the new payment details
+  // Update the order with the new payment details (simplified)
   const updatedOrder = await db.order.update({
     where: {
       id: orderId,
@@ -144,14 +146,7 @@ export const capturePayPalPayment = async (
     data: {
       paymentStatus: captureData.status === "COMPLETED" ? "Paid" : "Failed",
       paymentMethod: "Paypal",
-      paymentDetails: {
-        connect: {
-          id: newPaymentDetails.id,
-        },
-      },
-    },
-    include: {
-      paymentDetails: true,
+      updatedAt: new Date(),
     },
   });
 

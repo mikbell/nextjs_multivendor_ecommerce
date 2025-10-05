@@ -1,11 +1,11 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
-import { User } from "@prisma/client";
+import { user } from "@prisma/client";
 import { db } from "@/lib/db";
 export async function POST(req: Request) {
 	// You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
-	const WEBHOOK_SECRET = process.env.WEBHOOK_SECRET;
+	const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
 
 	if (!WEBHOOK_SECRET) {
 		throw new Error(
@@ -53,51 +53,89 @@ export async function POST(req: Request) {
 		// Parse the incoming event data
 		const data = JSON.parse(body).data;
 
-		// Create a user object with relevant properties
-		const user: Partial<User> = {
-			id: data.id,
-			name: `${data.first_name} ${data.last_name}`,
-			email: data.email_addresses[0].email_address,
-			picture: data.image_url,
-		};
-		// If user data is invalid, exit the function
-		if (!user) return;
+		// Validate required data
+		if (!data.id || !data.email_addresses || !data.email_addresses[0]) {
+			console.error("Invalid webhook data: missing required fields");
+			return new Response("Invalid webhook data", { status: 400 });
+		}
 
-		// Upsert user in the database (update if exists, create if not)
-		const dbUser = await db.user.upsert({
-			where: {
-				email: user.email,
+		// Extract user data safely
+		const userId = data.id;
+		const userName = `${data.first_name || ""} ${data.last_name || ""}`.trim() || "Unknown User";
+		const userEmail = data.email_addresses[0].email_address;
+		const userPicture = data.image_url || "";
+
+		try {
+			// Upsert user in the database (update if exists, create if not)
+			const dbUser = await db.user.upsert({
+				where: {
+					email: userEmail,
+				},
+			update: {
+				name: userName,
+				email: userEmail,
+				picture: userPicture,
+				updatedAt: new Date(),
 			},
-			update: user,
 			create: {
-				id: user.id!,
-				name: user.name!,
-				email: user.email!,
-				picture: user.picture!,
-				role: user.role || "USER", // Default role to "USER" if not provided
+				id: userId,
+				name: userName,
+				email: userEmail,
+				picture: userPicture,
+				role: "USER", // Default role to "USER" for new users
+				updatedAt: new Date(),
 			},
-		});
+			});
 
-		// Update user's metadata in Clerk with the role information
-		await clerkClient.users.updateUserMetadata(data.id, {
-			privateMetadata: {
-				role: dbUser.role || "USER", // Default role to "USER" if not present in dbUser
-			},
-		});
+			// Update user's metadata in Clerk with the role information
+			const clerk = await clerkClient();
+			await clerk.users.updateUserMetadata(userId, {
+				privateMetadata: {
+					role: dbUser.role, 
+				},
+			});
+		} catch (error) {
+			console.error("Error upserting user:", error);
+			return new Response(
+				JSON.stringify({ error: "Failed to process user webhook" }), 
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+			);
+		}
 	}
 
 	// When user is deleted
 	if (evt.type === "user.deleted") {
 		// Parse the incoming event data to get the user ID
-		const userId = JSON.parse(body).data.id;
+		const data = JSON.parse(body).data;
+		const userId = data.id;
 
-		// Delete the user from the database based on the user ID
-		await db.user.delete({
-			where: {
-				id: userId,
-			},
-		});
+		// Validate user ID
+		if (!userId) {
+			console.error("Invalid webhook data: missing user ID for deletion");
+			return new Response("Invalid webhook data", { status: 400 });
+		}
+
+		try {
+			// Delete the user from the database based on the user ID
+			await db.user.delete({
+				where: {
+					id: userId,
+				},
+			});
+		} catch (error) {
+			// If user doesn't exist in database, it's not an error for webhook purposes
+			console.log(`User ${userId} not found in database, skipping deletion`);
+		}
 	}
 
-	return new Response("", { status: 200 });
+	// Return success response with event type
+	return new Response(
+		JSON.stringify({ success: true, event: evt.type || "unknown" }), 
+		{ 
+			status: 200,
+			headers: {
+				"Content-Type": "application/json"
+			} 
+		}
+	);
 }

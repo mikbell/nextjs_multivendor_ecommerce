@@ -25,10 +25,10 @@ export const generateUniqueSlug = async (
         const existingRecord =
             model === "product"
                 ? await db.product.findFirst({
-                      where: { [field]: slug } as Prisma.ProductWhereInput,
+                      where: { [field]: slug } as Prisma.productWhereInput,
                   })
-                : await db.productVariant.findFirst({
-                      where: { [field]: slug } as Prisma.ProductVariantWhereInput,
+                : await db.productvariant.findFirst({
+                      where: { [field]: slug } as Prisma.productvariantWhereInput,
                   });
         if (!existingRecord) {
             break;

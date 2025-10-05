@@ -49,6 +49,7 @@ const SubCategoryDetails: FC<SubCategoryDetailsProps> = ({ data, categories }) =
 			description: data?.description ?? "",
 			image: data?.image ? [{ url: data.image }] : [],
 			slug: data?.slug ?? "",
+			url: (data as any)?.url ?? "",
 			featured: data?.featured ?? false,
 			categoryId: data?.categoryId ?? "",
 		}),
@@ -69,17 +70,26 @@ const SubCategoryDetails: FC<SubCategoryDetailsProps> = ({ data, categories }) =
 	const handleSubmit = async (values: z.infer<typeof SubCategoryFormSchema>) => {
 		setIsLoading(true);
 		try {
-			const payload = {
-				id: data?.id || uuid(),
+			const payload: any = {
 				name: values.name,
-				image: values.image[0]?.url || '',
+				image: values.image || [], // Invia l'array completo come richiesto dallo schema
 				slug: values.slug,
+				url: values.url,
 				description: values.description,
 				featured: values.featured,
 				categoryId: values.categoryId,
-				createdAt: new Date(),
-				updatedAt: new Date(),
 			};
+			
+			// Aggiungi ID solo se stiamo modificando una sottocategoria esistente
+			if (data?.id) {
+				payload.id = data.id;
+			}
+			
+			// Aggiungi timestamp solo per nuove sottocategorie (il server gestirà quelli per gli update)
+			if (!data?.id) {
+				payload.createdAt = new Date();
+				payload.updatedAt = new Date();
+			}
 
 			await apiClient.post("/api/subCategories/upsert", payload);
 
@@ -215,6 +225,25 @@ const SubCategoryDetails: FC<SubCategoryDetailsProps> = ({ data, categories }) =
 									</FormDescription>
 									<FormControl>
 										<Input placeholder="slug-sottocategoria" {...field} />
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+					</div>
+
+					<div className="grid grid-cols-1 md:grid-cols-1 gap-6">
+						<FormField
+							control={form.control}
+							name="url"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>URL sottocategoria</FormLabel>
+									<FormDescription>
+										URL identificativo per la sottocategoria (es. <code>t-shirt-casual</code>).
+									</FormDescription>
+									<FormControl>
+										<Input placeholder="url-sottocategoria" {...field} />
 									</FormControl>
 									<FormMessage />
 								</FormItem>

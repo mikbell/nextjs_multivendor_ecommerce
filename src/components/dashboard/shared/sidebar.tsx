@@ -23,8 +23,8 @@ const Sidebar: FC<SidebarProps> = async ({ isAdmin, stores }) => {
 				{user && <UserInfo user={user} />}
 			</div>
 
-			{!isAdmin && stores && (
-				<StoreSwitcher stores={stores} />
+		{!isAdmin && stores && (
+				<StoreSwitcher stores={stores.map(store => ({ name: store.name, url: store.slug }))} />
 			)}
 
 			{/* Scrollable nav section */}

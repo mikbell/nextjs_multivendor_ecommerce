@@ -62,7 +62,7 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError 
 					</div>
 					<CardTitle className="text-lg">Si è verificato un errore</CardTitle>
 					<CardDescription>
-						Qualcosa è andato storto. Prova a ricaricare la pagina o contatta l'assistenza se il problema persiste.
+						Qualcosa è andato storto. Prova a ricaricare la pagina o contatta l&apos;assistenza se il problema persiste.
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="space-y-4">

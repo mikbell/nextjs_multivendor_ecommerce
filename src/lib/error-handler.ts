@@ -42,11 +42,15 @@ export const handleError = (
 			statusCode: error.status,
 		} as AppError;
 	} else if (error instanceof ZodError) {
-		const firstError = error.errors[0];
-		processedError = new ValidationError(
-			firstError.message,
-			firstError.path.join(".")
-		) as AppError;
+  const firstError = error.issues[0];
+		if (firstError) {
+			processedError = new ValidationError(
+				firstError.message,
+				firstError.path.join(".")
+			) as AppError;
+		} else {
+			processedError = new ValidationError("Validation error", "unknown") as AppError;
+		}
 	} else if (error instanceof TypeError && error.message.includes("fetch")) {
 		processedError = new NetworkError() as AppError;
 	} else if (error instanceof Error) {
