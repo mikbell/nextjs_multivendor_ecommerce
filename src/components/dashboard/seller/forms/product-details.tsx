@@ -165,13 +165,28 @@ const ProductDetails: FC<ProductDetailsProps> = ({
 	>(data?.questions || [{ question: "", answer: "" }]);
 
 	// Form hook for managing form state and validation
+	// Create a modified schema for new variant pages that doesn't require product-level fields
+	const getValidationSchema = () => {
+		if (isNewVariantPage) {
+			// For new variants, only require variant-specific fields
+			return ProductFormSchema.partial({
+				name: true,
+				description: true,
+				brand: true,
+				categoryId: true,
+				subCategoryId: true
+			});
+		}
+		return ProductFormSchema;
+	};
+	
 	const form = useForm<
 		z.input<typeof ProductFormSchema>,
 		unknown,
 		z.infer<typeof ProductFormSchema>
 	>({
 		mode: "onChange", // Form validation mode
-		resolver: zodResolver(ProductFormSchema),
+		resolver: zodResolver(getValidationSchema()),
 		defaultValues: {
 			// Setting default form values from data (if available)
 			name: data?.name || "",
@@ -210,15 +225,16 @@ const ProductDetails: FC<ProductDetailsProps> = ({
 	const calculateFormProgress = () => {
 		const values = form.getValues();
 		let completedFields = 0;
-		const totalFields = 12; // numero totale di campi obbligatori
+		// For new variant page, some fields are not required (name, description, brand come from parent product)
+		const totalFields = isNewVariantPage ? 9 : 12;
 
-		if (values.name?.length > 0) completedFields++;
+		if (!isNewVariantPage && values.name?.length > 0) completedFields++;
 		if (values.variantName?.length > 0) completedFields++;
-		if (values.description?.length >= 20) completedFields++;
+		if (!isNewVariantPage && values.description?.length >= 20) completedFields++;
 		if (values.images?.length >= 3) completedFields++;
-		if (values.categoryId) completedFields++;
-		if (values.subCategoryId) completedFields++;
-		if (values.brand?.length > 0) completedFields++;
+		if (!isNewVariantPage && values.categoryId) completedFields++;
+		if (!isNewVariantPage && values.subCategoryId) completedFields++;
+		if (!isNewVariantPage && values.brand?.length > 0) completedFields++;
 		if (values.sku?.length >= 6) completedFields++;
 		if (values.weight && values.weight > 0) completedFields++;
 		if (values.colors?.length > 0 && values.colors.every(c => c.color.length > 0)) completedFields++;
@@ -231,6 +247,14 @@ const ProductDetails: FC<ProductDetailsProps> = ({
 	const formProgress = calculateFormProgress();
 	console.log("errors", form.formState.errors);
 	console.log("form progress", formProgress);
+	console.log("Debug - Available categories:", categories?.length || 0, categories);
+	console.log("Debug - Available subcategories:", subCategories?.length || 0, subCategories);
+	console.log("Debug - Current form values:", {
+		categoryId: form.getValues().categoryId,
+		subCategoryId: form.getValues().subCategoryId,
+		sku: form.getValues().sku,
+		weight: form.getValues().weight
+	});
 
 	const saleEndDate = form.getValues().saleEndDate || new Date().toISOString();
 
@@ -378,29 +402,200 @@ const ProductDetails: FC<ProductDetailsProps> = ({
 									console.log("Debug - Form submission started");
 									console.log("Debug - Form values before submit:", JSON.stringify(values, null, 2));
 									console.log("Debug - Form validation state:", form.formState);
+									console.log("Debug - isNewVariantPage:", isNewVariantPage);
+									console.log("Debug - Individual values:", {
+										name: values.name,
+										variantName: values.variantName,
+										brand: values.brand,
+										description: values.description,
+										categoryId: values.categoryId,
+										subCategoryId: values.subCategoryId,
+										sku: values.sku || `SKU-${Date.now()}`, // Generate SKU if missing
+										weight: values.weight && values.weight > 0 ? values.weight : 0.1, // Default weight
+										formProgress: formProgress
+									});
 									
-									// Alert per debug
-									alert(`Debug values:\nname: ${values.name}\nvariantName: ${values.variantName}\nbrand: ${values.brand}\ndescription: ${values.description}`);
+									// Force refresh form values to make sure we have the latest data
+									const currentFormValues = form.getValues();
+									console.log("Debug - Current form values from getValues():", {
+										name: currentFormValues.name,
+										variantName: currentFormValues.variantName,
+										brand: currentFormValues.brand,
+										description: currentFormValues.description
+									});
+									
+									// Use currentFormValues for validation instead of values parameter
+									const valuesToValidate = {
+										...values,
+										name: currentFormValues.name || values.name,
+										variantName: currentFormValues.variantName || values.variantName,
+										brand: currentFormValues.brand || values.brand,
+										description: currentFormValues.description || values.description
+									};
+									
+									console.log("Debug - Values to validate:", {
+										name: valuesToValidate.name,
+										variantName: valuesToValidate.variantName,
+										brand: valuesToValidate.brand,
+										description: valuesToValidate.description
+									});
+									
+										// As a fallback, check DOM elements directly
+									try {
+										const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+										const variantNameInput = document.querySelector('input[name="variantName"]') as HTMLInputElement;
+										const brandInput = document.querySelector('input[name="brand"]') as HTMLInputElement;
+										const descriptionInput = document.querySelector('textarea[name="description"]') as HTMLTextAreaElement;
+										
+										// Try to get values from Select components
+										const categorySelectTrigger = document.querySelector('[data-placeholder="Seleziona una categoria"]') as HTMLElement;
+										const subCategorySelectTrigger = document.querySelector('[data-placeholder="Seleziona una sottocategoria"]') as HTMLElement;
+										
+										console.log("Debug - DOM values:", {
+											name: nameInput?.value,
+											variantName: variantNameInput?.value,
+											brand: brandInput?.value,
+											description: descriptionInput?.value,
+											categorySelectText: categorySelectTrigger?.textContent,
+											subCategorySelectText: subCategorySelectTrigger?.textContent
+										});
+										
+										// If form values are empty but DOM values exist, use DOM values
+										if (!valuesToValidate.name && nameInput?.value) {
+											valuesToValidate.name = nameInput.value;
+										}
+										if (!valuesToValidate.variantName && variantNameInput?.value) {
+											valuesToValidate.variantName = variantNameInput.value;
+										}
+										if (!valuesToValidate.brand && brandInput?.value) {
+											valuesToValidate.brand = brandInput.value;
+										}
+										if (!valuesToValidate.description && descriptionInput?.value) {
+											valuesToValidate.description = descriptionInput.value;
+										}
+										
+										// Check if selects have values but form doesn't
+										if (!values.categoryId && categorySelectTrigger?.textContent && categorySelectTrigger.textContent !== 'Seleziona una categoria') {
+											console.log('Category selected in UI but not in form, attempting to fix...');
+											// Find category by name
+											const selectedCategoryName = categorySelectTrigger.textContent.trim();
+											const selectedCategory = categories?.find(cat => cat.name === selectedCategoryName);
+											if (selectedCategory) {
+												valuesToValidate.categoryId = selectedCategory.id;
+												form.setValue('categoryId', selectedCategory.id);
+												console.log(`Fixed categoryId: ${selectedCategory.id}`);
+											}
+										}
+										
+										if (!values.subCategoryId && subCategorySelectTrigger?.textContent && subCategorySelectTrigger.textContent !== 'Seleziona una sottocategoria') {
+											console.log('SubCategory selected in UI but not in form, attempting to fix...');
+											// Find subcategory by name
+											const selectedSubCategoryName = subCategorySelectTrigger.textContent.trim();
+											const selectedSubCategory = subCategories?.find(sub => sub.name === selectedSubCategoryName);
+											if (selectedSubCategory) {
+												valuesToValidate.subCategoryId = selectedSubCategory.id;
+												form.setValue('subCategoryId', selectedSubCategory.id);
+												console.log(`Fixed subCategoryId: ${selectedSubCategory.id}`);
+											}
+										}
+										
+										console.log("Debug - Final values after DOM check:", {
+											name: valuesToValidate.name,
+											variantName: valuesToValidate.variantName,
+											brand: valuesToValidate.brand,
+											description: valuesToValidate.description
+										});
+									} catch (domError) {
+										console.log("Error checking DOM values:", domError);
+									}
+									
+									// Early validation check to prevent empty submissions
+									// For new variant page, we don't require name, brand, and description (they come from parent product)
+									if (isNewVariantPage) {
+										if (!valuesToValidate.variantName) {
+											toast.error('Campo obbligatorio mancante: Nome variante. Compila il campo richiesto prima di procedere.');
+											return;
+										}
+									} else {
+										// For full product creation, validate all required fields
+										const missingFields = [];
+										if (!valuesToValidate.name) missingFields.push('Nome prodotto');
+										if (!valuesToValidate.variantName) missingFields.push('Nome variante');
+										if (!valuesToValidate.brand) missingFields.push('Marca');
+										if (!valuesToValidate.description) missingFields.push('Descrizione');
+// Check for missing values but provide fallbacks
+									// Check categoryId from both values and the current form state
+									const finalCategoryId = values.categoryId || valuesToValidate.categoryId;
+									const finalSubCategoryId = values.subCategoryId || valuesToValidate.subCategoryId;
+									
+									if (!finalCategoryId) {
+										console.warn('CategoryId is missing. Available categories:', categories?.length);
+										if (categories && categories.length === 0) {
+											console.warn('No categories available - skipping category validation for now');
+											toast.warning('⚠️ Nessuna categoria disponibile - il prodotto sarà creato senza categoria');
+										} else if (categories && categories.length > 0) {
+											missingFields.push('Categoria - seleziona dal dropdown');
+										} else {
+											console.warn('Categories data not loaded properly');
+											toast.warning('⚠️ Errore caricamento categorie - il prodotto sarà creato senza categoria');
+										}
+									}
+									if (!finalSubCategoryId) {
+										console.warn('SubCategoryId is missing. Available subcategories:', subCategories?.length);
+										if (subCategories && subCategories.length === 0) {
+											console.warn('No subcategories available - skipping subcategory validation for now');
+											toast.warning('⚠️ Nessuna sottocategoria disponibile - il prodotto sarà creato senza sottocategoria');
+										} else if (subCategories && subCategories.length > 0) {
+											missingFields.push('Sottocategoria - seleziona dal dropdown');
+										} else {
+											console.warn('SubCategories data not loaded properly');
+											toast.warning('⚠️ Errore caricamento sottocategorie - il prodotto sarà creato senza sottocategoria');
+										}
+									}
+									
+									// Prepare final values with defaults
+									const finalSku = values.sku || `SKU-${Date.now()}`;
+									const finalWeight = (values.weight && values.weight > 0) ? values.weight : 0.1;
+									
+									if (!values.sku) {
+										console.warn('SKU is missing, will generate one:', finalSku);
+									}
+									if (!values.weight || values.weight <= 0) {
+										console.warn('Weight is missing or invalid, will use default:', finalWeight);
+									}
+									
+									console.log('Debug - Final processed values:', {
+										finalCategoryId,
+										finalSubCategoryId,
+										finalSku,
+										finalWeight
+									});
+									
+									if (missingFields.length > 0) {
+											toast.error(`Campi obbligatori mancanti: ${missingFields.join(', ')}. Compila tutti i campi richiesti prima di procedere.`);
+											return;
+										}
+									}
 									
 									try {
-									await upsertProduct(
-										{
-											productId: data?.productId ? data.productId : v4(),
-											variantId: data?.variantId ? data.variantId : v4(),
-											name: values.name,
-											description: values.description,
-											variantName: values.variantName,
-											variantDescription: values.variantDescription || "",
-											images: values.images,
-											variantImage: values.variantImage?.[0]?.url || "",
-											categoryId: values.categoryId,
-											subCategoryId: values.subCategoryId,
-											offerTagId: values.offerTagId || "",
-											isSale: values.isSale,
-											saleEndDate: values.saleEndDate,
-											brand: values.brand,
-											sku: values.sku,
-											weight: values.weight,
+								await upsertProduct(
+									{
+										productId: data?.productId ? data.productId : v4(),
+										variantId: data?.variantId ? data.variantId : v4(),
+										name: valuesToValidate.name,
+										description: valuesToValidate.description,
+										variantName: valuesToValidate.variantName,
+										variantDescription: values.variantDescription || "",
+										images: values.images,
+										variantImage: values.variantImage?.[0]?.url || "",
+									categoryId: finalCategoryId,
+									subCategoryId: finalSubCategoryId,
+									offerTagId: values.offerTagId || "",
+									isSale: values.isSale,
+									saleEndDate: values.saleEndDate,
+									brand: valuesToValidate.brand,
+										sku: finalSku,
+										weight: finalWeight,
 											colors: values.colors,
 											sizes: values.sizes,
 											product_specs: values.product_specs,
@@ -1240,9 +1435,54 @@ const ProductDetails: FC<ProductDetailsProps> = ({
 								</CollapsibleContent>
 							</Collapsible>
 
+							{/* Debug buttons - rimuovere in produzione */}
+							<div className="flex gap-2 mb-2">
+								<Button 
+									type="button"
+									onClick={() => {
+										const vals = form.getValues();
+										alert(`Valori form:\nNome: "${vals.name}"\nVariante: "${vals.variantName}"\nMarca: "${vals.brand}"\nDescrizione: "${vals.description}"\nCategoria: "${vals.categoryId}"\nSottocategoria: "${vals.subCategoryId}"\nSKU: "${vals.sku}"\nPeso: "${vals.weight}"`);
+									}}
+									variant="outline"
+									size="sm"
+								>
+									🔍 Debug Valori
+								</Button>
+								
+								<Button 
+									type="button"
+									onClick={async () => {
+										// Force set default values for missing fields
+										if (categories && categories.length > 0 && !form.getValues().categoryId) {
+											form.setValue('categoryId', categories[0].id);
+											toast.info(`Categoria impostata automaticamente: ${categories[0].name}`);
+										}
+										if (!form.getValues().sku) {
+											form.setValue('sku', `SKU-${Date.now()}`);
+											toast.info('SKU generato automaticamente');
+										}
+										if (!form.getValues().weight || form.getValues().weight <= 0) {
+											form.setValue('weight', 0.1);
+											toast.info('Peso impostato a 0.1kg');
+										}
+										// Wait a bit for subcategories to load if a category was set
+										setTimeout(() => {
+											if (subCategories && subCategories.length > 0 && !form.getValues().subCategoryId) {
+												form.setValue('subCategoryId', subCategories[0].id);
+												toast.info(`Sottocategoria impostata automaticamente: ${subCategories[0].name}`);
+											}
+										}, 500);
+									}}
+									variant="secondary"
+									size="sm"
+								>
+									⚡ Auto-compila Campi
+								</Button>
+							</div>
+							
 							<Button 
 								type="submit" 
-								disabled={isLoading || formProgress < 90}
+								disabled={isLoading || formProgress < 90 || (!isNewVariantPage && (!form.getValues().name || !form.getValues().brand || !form.getValues().description)) || !form.getValues().variantName}
 								size="lg"
 								className="w-full"
 							>

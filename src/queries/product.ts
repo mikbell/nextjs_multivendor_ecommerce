@@ -112,9 +112,28 @@ const handleProductCreate = async (
 	product: ProductWithVariantType,
 	storeId: string
 ) => {
+		console.log("Debug - handleProductCreate called with product:", {
+			name: product.name,
+			variantName: product.variantName,
+			brand: product.brand,
+			description: product.description
+		});
+		
 		// Validate required fields
-		if (!product.name || !product.variantName || !product.brand || !product.description) {
-			throw new Error(`Missing required fields: name=${!!product.name}, variantName=${!!product.variantName}, brand=${!!product.brand}, description=${!!product.description}`);
+		// For new products, all fields are required. For variants, only variantName is required (others come from parent product)
+		const requiredFieldsForNewProduct = ['name', 'variantName', 'brand', 'description'];
+		const missingFields = [];
+		
+		if (!product.name) missingFields.push('name');
+		if (!product.variantName) missingFields.push('variantName');
+		if (!product.brand) missingFields.push('brand');
+		if (!product.description) missingFields.push('description');
+		
+		if (missingFields.length > 0) {
+			const fieldStatus = requiredFieldsForNewProduct.map(field => 
+				`${field}=${!!product[field as keyof typeof product]}`
+			).join(', ');
+			throw new Error(`Missing required fields: ${fieldStatus}. Missing: ${missingFields.join(', ')}`);
 		}
 		
 		// Generate unique slugs for product and variant
@@ -141,35 +160,40 @@ const handleProductCreate = async (
 		name: product.name,
 		description: product.description,
 		slug: productSlug,
-		store: { connect: { id: storeId } },
-		category: { connect: { id: product.categoryId } },
-		subCategory: { connect: { id: product.subCategoryId } },
-		offerTag: { connect: { id: product.offerTagId } },
+		storeId: storeId, // Add storeId directly instead of connect
+		...(product.categoryId && { categoryId: product.categoryId }), // Only add if not undefined
+		...(product.subCategoryId && { subCategoryId: product.subCategoryId }), // Only add if not undefined
+		...(product.offerTagId && product.offerTagId !== "" && { offerTagId: product.offerTagId }), // Only add if not empty
 		brand: product.brand,
-		specs: {
-			create: product.product_specs.map((spec) => ({
-				name: spec.name,
-				value: spec.value,
-			})),
-		},
-		questions: {
-			create: product.questions.map((q) => ({
-				question: q.question,
-				answer: q.answer,
-			})),
-		},
+		...(product.product_specs && product.product_specs.length > 0 && {
+			specs: {
+				create: product.product_specs.map((spec) => ({
+					name: spec.name,
+					value: spec.value,
+				})),
+			}
+		}),
+		...(product.questions && product.questions.length > 0 && {
+			questions: {
+				create: product.questions.map((q) => ({
+					question: q.question,
+					answer: q.answer,
+				})),
+			}
+		}),
+		shippingFeeMethod: product.shippingFeeMethod || "ITEM", // Default to ITEM if not provided
 		variants: {
 			create: [
 				{
 					id: product.variantId,
 					variantName: product.variantName,
-					variantDescription: product.variantDescription,
+					variantDescription: product.variantDescription || "",
 					slug: variantSlug,
-					variantImage: product.variantImage,
-					sku: product.sku,
-					weight: product.weight,
-					keywords: product.keywords.join(","),
-					isSale: product.isSale,
+					variantImage: product.variantImage || "",
+					sku: product.sku || `SKU-${Date.now()}`, // Generate default SKU if not provided
+					weight: product.weight || 0.1, // Default weight
+					keywords: Array.isArray(product.keywords) ? product.keywords.join(",") : "",
+					isSale: product.isSale || false,
 					saleEndDate: product.saleEndDate,
 					images: {
 						create: product.images.map((img) => ({
@@ -200,22 +224,20 @@ const handleProductCreate = async (
 				},
 			],
 		},
-		shippingFeeMethod: product.shippingFeeMethod,
-		freeShippingForAllCountries: product.freeShippingForAllCountries,
-		freeShipping: product.freeShippingForAllCountries
-			? undefined
-			: product.freeShippingCountriesIds &&
-			  product.freeShippingCountriesIds.length > 0
-			? {
-					create: {
-						eligibaleCountries: {
-							create: product.freeShippingCountriesIds.map((country) => ({
-								country: { connect: { id: country.value } },
-							})),
-						},
+		freeShippingForAllCountries: product.freeShippingForAllCountries || false,
+		...((!product.freeShippingForAllCountries && 
+			product.freeShippingCountriesIds && 
+			product.freeShippingCountriesIds.length > 0) && {
+			freeShipping: {
+				create: {
+					eligibaleCountries: {
+						create: product.freeShippingCountriesIds.map((country) => ({
+							country: { connect: { id: country.value } },
+						})),
 					},
-			  }
-			: undefined,
+				}
+			}
+		}),
 		createdAt: product.createdAt,
 		updatedAt: product.updatedAt,
 	};
