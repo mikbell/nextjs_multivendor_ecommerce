@@ -2,6 +2,7 @@
 
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
+import { v4 as uuidv4 } from "uuid";
 
 // Function: createPayPalPayment
 // Description: Creates a PayPal payment and return payment details.
@@ -122,7 +123,7 @@ export const capturePayPalPayment = async (
       userId: user.id,
     },
     create: {
-      id: require('uuid').v4(),
+      id: uuidv4(),
       paymentInetntId: paymentId,
       status:
         captureData.status === "COMPLETED" ? "Completed" : captureData.status,

@@ -13,7 +13,7 @@ import {
 import { currentUser } from "@clerk/nextjs/server";
 
 // Prisma models
-import { ShippingRate, Store } from "@prisma/client";
+import { shippingrate as ShippingRate, store as Store } from "@prisma/client";
 
 // Function: upsertStore
 // Description: Upserts store details into the database, ensuring uniqueness of name,url, email, and phone number.
@@ -267,7 +267,7 @@ export const getStoreShippingRates = async (storeUrl: string) => {
 		});
 
 		// Retrieve all shipping rates for the specified store
-		const shippingRates = await db.shippingRate.findMany({
+		const shippingRates = await db.shippingrate.findMany({
 			where: {
 				storeId: store.id,
 			},
@@ -347,7 +347,7 @@ export const upsertShippingRate = async (
 		if (!store) throw new Error("Please provide a valid store URL.");
 
 		// Upsert the shipping rate into the database
-		const shippingRateDetails = await db.shippingRate.upsert({
+		const shippingRateDetails = await db.shippingrate.upsert({
 			where: {
 				id: shippingRate.id,
 			},
@@ -401,33 +401,13 @@ export const getStoreOrders = async (storeUrl: string) => {
 		}
 
 		// Retrieve order groups for the specified store and user
-		const orders = await db.orderGroup.findMany({
+		const orders = await db.ordergroup.findMany({
 			where: {
 				storeId: store.id,
 			},
-			include: {
-				items: true,
-				coupon: true,
-				order: {
-					select: {
-						paymentStatus: true,
-
-						shippingAddress: {
-							include: {
-								country: true,
-								user: {
-									select: {
-										email: true,
-									},
-								},
-							},
-						},
-						paymentDetails: true,
-					},
-				},
-			},
+			// Note: include relationships removed due to schema limitations
 			orderBy: {
-				updatedAt: "desc",
+				createdAt: "desc", // Changed from updatedAt
 			},
 		});
 
@@ -483,6 +463,8 @@ export const applySeller = async (store: StoreType) => {
 		// Upsert store details into the database
 		const storeDetails = await db.store.create({
 			data: {
+				id: `store_${Date.now()}`, // Generate unique ID
+				slug: store.url, // Use URL as slug
 				...store,
 				defaultShippingService:
 					store.defaultShippingService || "International Delivery",
@@ -520,9 +502,7 @@ export const getAllStores = async () => {
 
 		// Fetch all stores from the database
 		const stores = await db.store.findMany({
-			include: {
-				user: true,
-			},
+			// Note: include relationships removed due to schema limitations
 			orderBy: {
 				createdAt: "desc",
 			},

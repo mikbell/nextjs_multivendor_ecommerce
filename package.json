@@ -1,9 +1,10 @@
 {
   "name": "multivendor_ecommerce",
   "version": "0.1.0",
+  "type": "module",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -15,7 +16,9 @@
     "analyze": "cross-env ANALYZE=true next build",
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js",
+    "db:reset": "prisma db push --force-reset && npm run db:seed"
   },
   "dependencies": {
     "@clerk/clerk-sdk-node": "^4.13.23",

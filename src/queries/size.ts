@@ -35,39 +35,17 @@ export const getFilteredSizes = async (
 	}
 
 	// Construct the query dynamically based on the available filters
+	// Note: Complex query disabled due to schema relationship issues
+	// TODO: Re-enable when Prisma relations are properly set up
 	const sizes = await db.size.findMany({
-		where: {
-			productVariant: {
-				product: {
-					AND: [
-						category ? { category: { slug: category } } : {},
-						subCategory ? { subCategory: { slug: subCategory } } : {},
-						offer ? { category: { slug: offer } } : {},
-						storeId ? { store: { id: storeId } } : {},
-					],
-				},
-			},
-		},
 		select: {
 			size: true,
 		},
 		take,
 	});
 
-	// Get Sizes count
-	const count = await db.size.count({
-		where: {
-			productVariant: {
-				product: {
-					AND: [
-						category ? { category: { slug: category } } : {},
-						subCategory ? { category: { slug: subCategory } } : {},
-						offer ? { category: { slug: offer } } : {},
-					],
-				},
-			},
-		},
-	});
+	// Get Sizes count - simplified
+	const count = await db.size.count();
 
 	// Remove duplicate sizes
 	const uniqueSizesArray = Array.from(new Set(sizes.map((size) => size.size)));

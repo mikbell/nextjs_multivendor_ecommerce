@@ -23,11 +23,7 @@ export default async function AdminCategoriesPage() {
 				}
 			/>
 
-			<DataTable
-				columns={columns}
-				data={categories}
-				searchKey="name"
-			/>
+			<DataTable columns={columns} data={categories} searchKey="name" />
 		</div>
 	);
 }

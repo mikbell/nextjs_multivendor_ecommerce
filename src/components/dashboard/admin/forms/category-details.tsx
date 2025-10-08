@@ -1,279 +1,178 @@
 "use client";
 
-import { Category } from "@/generated/prisma";
-
-// Temporary interface to extend Category with url field until Prisma client is regenerated
-interface CategoryWithUrl extends Category {
-	url: string;
-}
-import { CategoryFormSchema } from "@/lib/schemas";
-import { apiClient } from "@/lib/api-client";
-import { handleFormError, showSuccessToast } from "@/lib/error-handler";
-import { FC, useEffect, useMemo, useState } from "react";
-import * as z from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { FC, Suspense } from "react";
+import { Form } from "@/components/ui/form";
+import { ClientOnly } from "@/components/ui/client-only";
+import { ArrowRight, CheckCircle, Loader2 } from "lucide-react";
 import {
-	Form,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormControl,
-	FormMessage,
-	FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import ImageUpload from "@/components/dashboard/shared/image-upload";
-import { FormCard } from "@/components/dashboard/shared/form-card";
-import { v4 as uuid } from "uuid";
-import { useRouter } from "next/navigation";
-import { Textarea } from "@/components/ui/textarea";
+	CategoryImage,
+	CategoryBasicInfo,
+	CategoryDescription,
+	CategorySettings,
+	FormActions,
+	FormProgress,
+	useCategoryForm,
+	CategoryDetailsProps,
+	CategoryFormErrorBoundary,
+} from "./category-details/index";
+import { CategoryWithUrl } from "./category-details/types";
 
-interface CategoryDetailsProps {
-	data?: CategoryWithUrl;
-}
+// Loading fallback component
+const FormLoadingFallback: FC = () => (
+	<div className="min-h-screen bg-background flex items-center justify-center">
+		<div className="text-center space-y-4">
+			<div className="relative">
+				<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+				<Loader2 className="h-6 w-6 absolute inset-0 m-auto text-primary animate-pulse" />
+			</div>
+			<div>
+				<h2 className="text-lg font-semibold text-foreground mb-2">
+					Caricamento modulo categoria
+				</h2>
+				<p className="text-sm text-muted-foreground">
+					Preparazione del form in corso...
+				</p>
+			</div>
+		</div>
+	</div>
+);
 
+// Form content component with error boundary
+const CategoryFormContent: FC<{ data?: CategoryWithUrl }> = ({ data }) => {
+	const { form, onSubmit, isLoading, isEditMode, formProgress } =
+		useCategoryForm({ data });
+
+	try {
+		return (
+			<div className="space-y-6 max-w-full overflow-hidden">
+				{/* Progress Tracking */}
+				<FormProgress formProgress={formProgress} isEditMode={isEditMode} />
+
+				<Form {...form}>
+					<div className="space-y-6 pb-32"> {/* Changed from form to div to avoid Server Action issues */}
+						{/* Form Sections - Each wrapped in Suspense for better loading */}
+						<Suspense
+							fallback={
+								<div className="h-48 bg-muted/30 rounded-lg animate-pulse" />
+							}>
+							<CategoryImage form={form} isLoading={isLoading} />
+						</Suspense>
+
+						<Suspense
+							fallback={
+								<div className="h-64 bg-muted/30 rounded-lg animate-pulse" />
+							}>
+							<CategoryBasicInfo form={form} isLoading={isLoading} />
+						</Suspense>
+
+						<Suspense
+							fallback={
+								<div className="h-56 bg-muted/30 rounded-lg animate-pulse" />
+							}>
+							<CategoryDescription form={form} isLoading={isLoading} />
+						</Suspense>
+
+						<Suspense
+							fallback={
+								<div className="h-48 bg-muted/30 rounded-lg animate-pulse" />
+							}>
+							<CategorySettings form={form} isLoading={isLoading} />
+						</Suspense>
+
+						{/* Form Actions - Always visible */}
+						<FormActions isLoading={isLoading} {...(data && { data })} onSubmit={onSubmit} />
+					</div>
+				</Form>
+			</div>
+		);
+	} catch (error) {
+		console.error("CategoryFormContent error:", error);
+		return (
+			<div className="min-h-screen bg-background flex items-center justify-center">
+				<div className="text-center space-y-4">
+					<h1 className="text-xl font-bold text-destructive">
+						Errore di caricamento
+					</h1>
+					<p className="text-muted-foreground">
+						Si è verificato un errore durante il caricamento del modulo
+						categoria.
+					</p>
+					<button
+						onClick={() => window.location.reload()}
+						className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">
+						Ricarica pagina
+					</button>
+				</div>
+			</div>
+		);
+	}
+};
+
+// Main component with error boundary
 const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
-	const router = useRouter();
-	const [isLoading, setIsLoading] = useState(false);
-
-	const defaultValues = useMemo<Partial<z.input<typeof CategoryFormSchema>>>(
-		() => ({
-			name: data?.name ?? "",
-			description: data?.description ?? "",
-			image: data?.image ? [{ url: data.image }] : [],
-			slug: data?.slug ?? "",
-			url: data?.url ?? "",
-			featured: data?.featured ?? false,
-		}),
-		[data]
-	);
-
-	const form = useForm<
-		z.input<typeof CategoryFormSchema>,
-		unknown,
-		z.infer<typeof CategoryFormSchema>
-	>({
-		resolver: zodResolver(CategoryFormSchema),
-		defaultValues,
-	});
-
-	const isFormLoading = form.formState.isSubmitting || isLoading;
-
-	const handleSubmit = async (values: z.infer<typeof CategoryFormSchema>) => {
-		setIsLoading(true);
-		try {
-		const payload: any = {
-			name: values.name,
-			image: values.image || [], // Assicura che sia sempre un array
-			slug: values.slug,
-			url: values.url,
-			description: values.description,
-			featured: values.featured,
-		};
-		
-		// Aggiungi ID solo se stiamo modificando una categoria esistente
-		if (data?.id) {
-			payload.id = data.id;
-		}
-		
-		// Aggiungi timestamp solo per nuove categorie (il server gestirà quelli per gli update)
-		if (!data?.id) {
-			payload.createdAt = new Date();
-			payload.updatedAt = new Date();
-		}
-
-			await apiClient.post("/api/categories/upsert", payload);
-
-			showSuccessToast(
-				data?.id ? "Categoria aggiornata" : "Categoria creata",
-				"Operazione completata con successo."
-			);
-
-			router.push("/dashboard/admin/categories");
-		} catch (error) {
-			handleFormError(error, "salvataggio categoria");
-		} finally {
-			setIsLoading(false);
-		}
-	};
-
-	useEffect(() => {
-		if (data) {
-			form.reset(defaultValues);
-		}
-	}, [data, defaultValues, form]);
-
 	return (
-		<FormCard
-			title={data?.id ? `Modifica categoria: ${data.name}` : "Nuova categoria"}
-			description={data?.id ? "Aggiorna i dettagli della categoria" : "Crea una nuova categoria per organizzare i tuoi prodotti"}
-			loading={isFormLoading}
-		>
-			<Form {...form}>
-				<form
-					onSubmit={form.handleSubmit(handleSubmit)}
-					className="space-y-8"
-					autoComplete="off"
-					suppressHydrationWarning
-				>
-					<FormField
-						control={form.control}
-						name="image"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Immagine categoria</FormLabel>
-								<FormDescription>
-									Carica una sola immagine rappresentativa della categoria.
-								</FormDescription>
-								<FormControl>
-									<ImageUpload
-										type="standard"
-										maxImages={1}
-										uploadText="Carica immagine"
-										removeText="Rimuovi"
-										value={(field.value ?? []).map((image) => image.url)}
-										disabled={isFormLoading}
-										onChange={(urls) => field.onChange(urls.map(url => ({ url })))}
-										onRemove={(url) =>
-											field.onChange(
-												(field.value ?? []).filter(
-													(image) => image.url !== url
-												)
-											)
-										}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-						<FormField
-							control={form.control}
-							name="name"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome categoria</FormLabel>
-									<FormDescription>
-										Il nome verrà mostrato agli utenti e nei menu.
-									</FormDescription>
-									<FormControl>
-										<Input placeholder="Nome categoria" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="slug"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Slug categoria</FormLabel>
-									<FormDescription>
-										Inserisci lo slug (es. <code>t-shirt</code>). Niente spazi o caratteri speciali.
-									</FormDescription>
-									<FormControl>
-										<Input placeholder="slug-categoria" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-
-						<FormField
-							control={form.control}
-							name="url"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>URL categoria</FormLabel>
-									<FormDescription>
-										URL identificativo per la categoria (es. <code>maglie</code>).
-									</FormDescription>
-									<FormControl>
-										<Input placeholder="url-categoria" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
-
-					<FormField
-						control={form.control}
-						name="description"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Descrizione categoria</FormLabel>
-								<FormDescription>
-									La descrizione verrà mostrata agli utenti per spiegare il tipo di prodotti nella categoria.
-								</FormDescription>
-								<FormControl>
-									<Textarea
-										placeholder="Descrivi questa categoria..."
-										className="min-h-[100px]"
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-
-					<FormField
-						control={form.control}
-						name="featured"
-						render={({ field }) => (
-							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-								<FormControl>
-									<Checkbox
-										checked={field.value}
-										onCheckedChange={(checked) =>
-											field.onChange(checked === true)
-										}
-										onBlur={field.onBlur}
-										name={field.name}
-										ref={field.ref}
-									/>
-								</FormControl>
-								<div className="space-y-1 leading-none">
-									<FormLabel>Categoria in evidenza</FormLabel>
-									<FormDescription>
-										Le categorie in evidenza vengono mostrate nella homepage e nelle sezioni principali.
-									</FormDescription>
+		<CategoryFormErrorBoundary
+			onError={(error, errorInfo) => {
+				// Log error for monitoring
+				console.error("Category form error:", { error, errorInfo, data });
+				// You could send this to your error monitoring service here
+			}}>
+			<div className="min-h-screen bg-background category-form-container">
+				<div className="w-full">
+					<div className="container mx-auto max-w-7xl px-4 py-8">
+						{/* Enhanced Header Section */}
+						<header className="mb-8">
+							<div className="flex items-center gap-4 mb-6">
+								{/* Animated icon */}
+								<div className="relative">
+									<div className="absolute inset-0 bg-primary rounded-xl blur-lg opacity-20 animate-pulse"></div>
+									<div className="relative p-3 bg-primary rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+										<ArrowRight className="h-7 w-7 text-primary-foreground" />
+									</div>
 								</div>
-							</FormItem>
-						)}
-					/>
 
-					<Separator className="my-6" />
+								{/* Title and description */}
+								<div className="flex-1">
+									<h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 leading-tight">
+										{data?.id ? (
+											<>
+												Modifica categoria
+												{data.name && (
+													<span className="block text-xl font-medium text-muted-foreground mt-1">
+														{data.name}
+													</span>
+												)}
+											</>
+										) : (
+											"Nuova categoria"
+										)}
+									</h1>
+									<p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
+										{data?.id
+											? "Aggiorna i dettagli della categoria esistente"
+											: "Crea una nuova categoria per organizzare e presentare i tuoi prodotti"}
+									</p>
+								</div>
 
-					<div className="flex justify-end gap-3">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => router.back()}
-							disabled={isFormLoading}
-						>
-							Annulla
-						</Button>
-						<Button
-							type="submit"
-							disabled={isFormLoading}
-							size="default"
-						>
-							{isFormLoading ? "Salvataggio..." : "Salva categoria"}
-						</Button>
+								{/* Success indicator */}
+								<div className="hidden lg:block">
+									<div className="animate-bounce">
+										<CheckCircle className="h-8 w-8 text-green-600 opacity-50" />
+									</div>
+								</div>
+							</div>
+						</header>
+
+						{/* Form Container with Error Boundary and Loading States */}
+						<main>
+							<ClientOnly fallback={<FormLoadingFallback />}>
+								<CategoryFormContent {...(data && { data })} />
+							</ClientOnly>
+						</main>
 					</div>
-				</form>
-			</Form>
-		</FormCard>
+				</div>
+			</div>
+		</CategoryFormErrorBoundary>
 	);
 };
 

@@ -179,6 +179,17 @@
   }
 }
 
+/* Form overflow fixes */
+.product-form-container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.product-form-container * {
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 /* Cloudinary Upload Widget integration tweaks */
 /* When widget is open, prevent interacting with the app underneath */
 body.cld-widget-open {

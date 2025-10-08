@@ -19,9 +19,10 @@ export default async function DashboardPage() {
 				<div className="max-w-4xl mx-auto">
 					<h1 className="text-3xl font-bold mb-6">Dashboard Utente</h1>
 					<div className="grid gap-6">
-						<div className="bg-white p-6 rounded-lg shadow">
+						<div className="bg-accent p-6 rounded-lg shadow">
 							<h2 className="text-xl font-semibold mb-4">Benvenuto!</h2>
 							<p>Questa è la tua dashboard personale.</p>
+							<p>Al momento non puoi fare assolutamente niente :)</p>
 						</div>
 					</div>
 				</div>

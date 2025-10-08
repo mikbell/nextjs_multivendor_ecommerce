@@ -12,6 +12,12 @@ import {
   PaginatedResponse 
 } from "@/core/types";
 import { Prisma } from "@prisma/client";
+import { randomBytes } from 'crypto';
+
+// Simple ID generation function
+const generateId = () => {
+  return randomBytes(12).toString('base64url');
+};
 
 export class CategoryService {
   /**
@@ -30,8 +36,8 @@ export class CategoryService {
       ...(featured !== undefined && { featured }),
       ...(search && {
         OR: [
-          { name: { contains: search, mode: 'insensitive' } },
-          { description: { contains: search, mode: 'insensitive' } }
+          { name: { contains: search } },
+          { description: { contains: search } }
         ]
       })
     };
@@ -78,19 +84,32 @@ export class CategoryService {
   static async getCategoryWithSubCategories(
     idOrSlug: string
   ): Promise<CategoryWithSubCategories | null> {
-    return db.category.findFirst({
+    const category = await db.category.findFirst({
       where: {
         OR: [
           { id: idOrSlug },
           { slug: idOrSlug }
         ]
-      },
-      include: {
-        subCategories: {
-          orderBy: { name: 'asc' }
-        }
       }
-    }) as Promise<CategoryWithSubCategories | null>;
+    });
+
+    if (!category) {
+      return null;
+    }
+
+    const subCategories = await db.subcategory.findMany({
+      where: {
+        categoryId: category.id
+      },
+      orderBy: {
+        name: 'asc'
+      }
+    });
+
+    return {
+      ...category,
+      subCategories
+    } as CategoryWithSubCategories;
   }
 
   /**
@@ -114,7 +133,7 @@ export class CategoryService {
     return db.category.create({
       data: {
         name: data.name,
-        image: data.image[0].url, // Take first image
+        image: data.image?.[0]?.url || '', // Take first image
         url: data.url,
         slug: data.slug,
         description: data.description,
@@ -159,7 +178,7 @@ export class CategoryService {
       where: { id },
       data: {
         ...(data.name && { name: data.name }),
-        ...(data.image && { image: data.image[0].url }),
+        ...(data.image?.[0]?.url && { image: data.image[0].url }),
         ...(data.url && { url: data.url }),
         ...(data.slug && { slug: data.slug }),
         ...(data.description && { description: data.description }),
@@ -266,13 +285,15 @@ export class CategoryService {
 
     return db.subcategory.create({
       data: {
+        id: generateId(),
         name: data.name,
-        image: data.image[0].url,
+        image: data.image?.[0]?.url || '',
         url: data.url,
         slug: data.slug,
         description: data.description,
         featured: data.featured,
-        categoryId: data.categoryId
+        categoryId: data.categoryId,
+        updatedAt: new Date()
       }
     });
   }

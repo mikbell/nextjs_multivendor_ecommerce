@@ -6,23 +6,18 @@ import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Card, CardContent, CardTitle, CardHeader } from "@/components/ui/card";
-import {
-	Form,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormControl,
-	FormMessage,
-	FormDescription,
-} from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
-import ImageUpload from "@/components/dashboard/shared/image-upload";
 import { v4 as uuid } from "uuid";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Textarea } from "@/components/ui/textarea";
+import {
+	BasicInfo,
+	MediaUpload,
+	StoreDescription,
+	ShippingSettings,
+	StorePolicies,
+} from "./store-details/index";
 
 interface StoreDetailsProps {
 	data?: Partial<z.input<typeof StoreFormSchema>> & { id?: string };
@@ -145,251 +140,22 @@ const StoreDetails: FC<StoreDetailsProps> = ({ data }) => {
 				<Form {...form}>
 					<form
 						onSubmit={form.handleSubmit(handleSubmit)}
-						className="space-y-6">
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							{/* CAMPO LOGO AGGIORNATO */}
-							<FormField
-								control={form.control}
-								name="logo"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Logo</FormLabel>
-										<FormControl>
-											<ImageUpload
-												value={
-													field.value ? [field.value] : []
-												}
-												onChange={(urls) => field.onChange(urls[0] ?? "")}
-												onRemove={() => field.onChange("")}
-												type="logo"
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							{/* CAMPO COVER AGGIORNATO */}
-							<FormField
-								control={form.control}
-								name="cover"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Cover</FormLabel>
-										<FormControl>
-											<ImageUpload
-												value={
-													field.value ? [field.value] : []
-												}
-												onChange={(urls) => field.onChange(urls[0] ?? "")}
-												onRemove={() => field.onChange("")}
-												type="cover"
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
-						{/* Resto del form invariato */}
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<FormField
-								control={form.control}
-								name="name"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Nome</FormLabel>
-										<FormControl>
-											<Input placeholder="es. Mio negozio" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="email"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Email</FormLabel>
-										<FormControl>
-											<Input
-												type="email"
-												placeholder="es. nome@dominio.it"
-												{...field}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+						className="space-y-8">
 
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<FormField
-								control={form.control}
-								name="phone"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Telefono</FormLabel>
-										<FormControl>
-											<Input placeholder="es. +39 333 1234567" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="slug"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>URL</FormLabel>
-										<FormDescription>
-											Minuscole, numeri e trattini.
-										</FormDescription>
-										<FormControl>
-											<Input placeholder="es. mio-negozio" {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+						{/* Media Upload Section */}
+						<MediaUpload form={form} />
 
-						<FormField
-							control={form.control}
-							name="description"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Descrizione</FormLabel>
-									<FormControl>
-										<Textarea
-											placeholder="Descrivi il tuo negozio"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+						{/* Basic Information Section */}
+						<BasicInfo form={form} />
 
-						<div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-							<FormField
-								control={form.control}
-								name="featured"
-								render={({ field }) => (
-									<FormItem className="flex items-center gap-2">
-										<FormLabel>In evidenza</FormLabel>
-										<FormControl>
-											<Checkbox
-												checked={field.value}
-												onCheckedChange={(checked) =>
-													field.onChange(checked === true)
-												}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="defaultShippingService"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Servizio di spedizione predefinito</FormLabel>
-										<FormControl>
-											<Input placeholder="es. DHL, Poste, ..." {...field} />
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="defaultShippingFee"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Spedizione (euro)</FormLabel>
-										<FormControl>
-											<Input
-												type="number"
-												step="0.01"
-												min={0}
-												name={field.name}
-												onBlur={field.onBlur}
-												ref={field.ref}
-												value={Number(field.value ?? 0)}
-												onChange={(e) => field.onChange(Number(e.target.value))}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+						{/* Store Description Section */}
+						<StoreDescription form={form} />
 
-						<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-							<FormField
-								control={form.control}
-								name="defaultDeliveryTimeMin"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Tempo consegna min (giorni)</FormLabel>
-										<FormControl>
-											<Input
-												type="number"
-												min={0}
-												name={field.name}
-												onBlur={field.onBlur}
-												ref={field.ref}
-												value={Number(field.value ?? 0)}
-												onChange={(e) => field.onChange(Number(e.target.value))}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-							<FormField
-								control={form.control}
-								name="defaultDeliveryTimeMax"
-								render={({ field }) => (
-									<FormItem>
-										<FormLabel>Tempo consegna max (giorni)</FormLabel>
-										<FormControl>
-											<Input
-												type="number"
-												min={0}
-												name={field.name}
-												onBlur={field.onBlur}
-												ref={field.ref}
-												value={Number(field.value ?? 0)}
-												onChange={(e) => field.onChange(Number(e.target.value))}
-											/>
-										</FormControl>
-										<FormMessage />
-									</FormItem>
-								)}
-							/>
-						</div>
+						{/* Shipping Settings Section */}
+						<ShippingSettings form={form} />
 
-						<FormField
-							control={form.control}
-							name="returnPolicy"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Politica di reso</FormLabel>
-									<FormControl>
-										<Textarea
-											placeholder="Dettagli sulla politica di reso"
-											{...field}
-										/>
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+						{/* Store Policies Section */}
+						<StorePolicies form={form} />
 
 						<Button type="submit" disabled={isLoading}>
 							{isLoading

@@ -10,8 +10,7 @@ export const urlSafePattern = /^(?!.*(?:[-_ ]){2,})[a-zA-Z0-9_-]+$/;
 export const requiredString = (fieldName: string, min = 1, max = 255) =>
   z
     .string({
-      required_error: `${fieldName} è obbligatorio`,
-      invalid_type_error: `${fieldName} deve essere una stringa valida`,
+      message: `${fieldName} è obbligatorio`,
     })
     .min(min, `${fieldName} deve essere almeno ${min} caratteri`)
     .max(max, `${fieldName} non può superare ${max} caratteri`);
@@ -21,23 +20,20 @@ export const optionalString = (max = 255) =>
 
 export const email = z
   .string({
-    required_error: "Email è obbligatoria",
-    invalid_type_error: "Email deve essere una stringa valida",
+    message: "Email è obbligatoria",
   })
   .email("Formato email non valido");
 
 export const phone = z
   .string({
-    required_error: "Numero di telefono è obbligatorio",
-    invalid_type_error: "Numero di telefono deve essere una stringa valida",
+    message: "Numero di telefono è obbligatorio",
   })
   .regex(phonePattern, "Formato numero di telefono non valido");
 
 export const slug = (fieldName: string, min = 2, max = 50) =>
   z
     .string({
-      required_error: `${fieldName} slug è obbligatorio`,
-      invalid_type_error: `${fieldName} slug deve essere una stringa valida`,
+      message: `${fieldName} slug è obbligatorio`,
     })
     .min(min, `${fieldName} slug deve essere almeno ${min} caratteri`)
     .max(max, `${fieldName} slug non può superare ${max} caratteri`)
@@ -49,8 +45,7 @@ export const slug = (fieldName: string, min = 2, max = 50) =>
 export const description = (fieldName: string, min = 10, max = 500) =>
   z
     .string({
-      required_error: `${fieldName} descrizione è obbligatoria`,
-      invalid_type_error: `${fieldName} descrizione deve essere una stringa valida`,
+      message: `${fieldName} descrizione è obbligatoria`,
     })
     .min(min, `${fieldName} descrizione deve essere almeno ${min} caratteri`)
     .max(max, `${fieldName} descrizione non può superare ${max} caratteri`);
@@ -65,16 +60,14 @@ export const imageArray = (min = 1, max = 1, fieldName = "Immagine") =>
 export const positiveNumber = (fieldName: string, min = 0.01) =>
   z
     .number({
-      required_error: `${fieldName} è obbligatorio`,
-      invalid_type_error: `${fieldName} deve essere un numero valido`,
+      message: `${fieldName} è obbligatorio`,
     })
     .min(min, `${fieldName} deve essere almeno ${min}`);
 
 export const positiveInteger = (fieldName: string, min = 1) =>
   z
     .number({
-      required_error: `${fieldName} è obbligatorio`,
-      invalid_type_error: `${fieldName} deve essere un numero intero valido`,
+      message: `${fieldName} è obbligatorio`,
     })
     .int(`${fieldName} deve essere un numero intero`)
     .min(min, `${fieldName} deve essere almeno ${min}`);
@@ -82,8 +75,7 @@ export const positiveInteger = (fieldName: string, min = 1) =>
 export const uuid = (fieldName: string) =>
   z
     .string({
-      required_error: `${fieldName} ID è obbligatorio`,
-      invalid_type_error: `${fieldName} ID deve essere una stringa valida`,
+      message: `${fieldName} ID è obbligatorio`,
     })
     .uuid(`${fieldName} ID non valido`);
 
@@ -102,8 +94,7 @@ export const optionalUuid = (fieldName: string) =>
 export const dateString = (fieldName: string) =>
   z
     .string({
-      required_error: `${fieldName} è obbligatoria`,
-      invalid_type_error: `${fieldName} deve essere una data valida`,
+      message: `${fieldName} è obbligatoria`,
     })
     .datetime(`${fieldName} deve essere in formato data valido`);
 
@@ -118,7 +109,7 @@ export const paginationSchema = z.object({
 // Search schema
 export const searchSchema = z.object({
   query: z.string().min(1, "Query di ricerca è obbligatoria"),
-  filters: z.record(z.any()).optional(),
+  filters: z.record(z.string(), z.any()).optional(),
 });
 
 // Common response schemas
@@ -133,6 +124,6 @@ export const errorResponseSchema = z.object({
   error: z.object({
     message: z.string(),
     statusCode: z.number(),
-    errors: z.record(z.array(z.string())).optional(),
+    errors: z.record(z.string(), z.array(z.string())).optional(),
   }),
 });

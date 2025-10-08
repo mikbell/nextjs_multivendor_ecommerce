@@ -3,8 +3,6 @@
 import {
 	SignedIn,
 	SignedOut,
-	SignInButton,
-	SignUpButton,
 	UserButton,
 } from "@clerk/nextjs";
 import { Button } from "../ui/button";
@@ -19,12 +17,12 @@ export function Header() {
 
 			<div className="flex items-center gap-4">
 				<SignedOut>
-					<SignInButton>
+					<Link href="sign-in">
 						<Button variant="ghost">Accedi</Button>
-					</SignInButton>
-					<SignUpButton>
+					</Link>
+					<Link href="sign-up">
 						<Button>Registrati</Button>
-					</SignUpButton>
+					</Link>
 				</SignedOut>
 				<SignedIn>
 					<Link href="/dashboard">

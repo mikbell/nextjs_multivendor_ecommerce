@@ -56,6 +56,9 @@ export interface ErrorDetails {
   constraint?: string;
   expected?: any;
   actual?: any;
+  retryAfter?: number;
+  originalError?: string;
+  service?: string;
 }
 
 export class AppError extends Error {

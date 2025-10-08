@@ -18,7 +18,7 @@ import {
   orderitem as OrderItem,
   category as Category,
   subcategory as SubCategory,
-  product_shippingFeeMethod,
+  $Enums,
 } from "@prisma/client";
 
 // Re-export Prisma types for convenience
@@ -42,7 +42,7 @@ export type {
   OrderItem,
   Category,
   SubCategory,
-  product_shippingFeeMethod,
+  $Enums,
 };
 
 // Enhanced types with relationships

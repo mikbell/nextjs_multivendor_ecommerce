@@ -1,0 +1,9 @@
+export { FormProgress } from './FormProgress';
+export { ProductBasicInfo } from './ProductBasicInfo';
+export { ProductImages } from './ProductImages';
+export { DebugPanel } from './DebugPanel';
+export { ProductTechnicalDetails } from './ProductTechnicalDetails';
+export { VariantDetails } from './VariantDetails';
+export { ProductSpecs } from './ProductSpecs';
+export { ProductQuestions } from './ProductQuestions';
+export { ShippingSettings } from './ShippingSettings';

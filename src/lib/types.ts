@@ -14,27 +14,27 @@ import {
 } from "@/queries/store";
 import { getAllSubCategories } from "@/queries/subCategory";
 import {
-	cart as Cart,
-	cartitem as CartItem,
-	color as Color,
-	freeshipping as FreeShipping,
-	freeshippingcountry as FreeShippingCountry,
+	Cart,
+	CartItem,
+	Color,
+	FreeShipping,
+	FreeShippingCountry,
 	Prisma,
-	productvariantimage as ProductVariantImage,
-	review as Review,
-	reviewimage as ReviewImage,
-	shippingaddress as ShippingAddress,
-	shippingrate as ShippingRate,
-	size as Size,
-	user as User,
-	country as CountryPrisma,
-	coupon as Coupon,
-	store as Store,
-	ordergroup as OrderGroup,
-	orderitem as OrderItem,
-	category as Category,
-	subcategory as SubCategory,
-	product_shippingFeeMethod,
+	ProductVariantImage,
+	Review,
+	ReviewImage,
+	ShippingAddress,
+	ShippingRate,
+	Size,
+	User,
+	Country as CountryPrisma,
+	Coupon,
+	Store,
+	OrderGroup,
+	OrderItem,
+	Category,
+	SubCategory,
+	$Enums,
 } from "@prisma/client";
 import countries from "@/data/countries.json";
 import { getOrder } from "@/queries/order";
@@ -43,7 +43,6 @@ import {
 	getUserPayments,
 	getUserWishlist,
 } from "@/queries/profile";
-import { string } from "zod";
 import { getHomeFeaturedCategories } from "@/queries/home";
 
 export interface DashboardSidebarMenuInterface {
@@ -89,7 +88,7 @@ export type ProductWithVariantType = {
 	questions: { id?: string; question: string; answer: string }[];
 	freeShippingForAllCountries: boolean;
 	freeShippingCountriesIds: { id?: string; label: string; value: string }[];
-	shippingFeeMethod: product_shippingFeeMethod;
+	shippingFeeMethod: $Enums.ProductShippingFeeMethod;
 	createdAt: Date;
 	updatedAt: Date;
 };

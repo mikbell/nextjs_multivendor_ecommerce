@@ -2,6 +2,7 @@ import { getAllCategories } from "@/queries/category";
 import React from "react";
 import ProductDetails from "@/components/dashboard/seller/forms/product-details";
 import { getAllSubCategories } from "@/queries/subCategory";
+import CloudinaryTest from "@/components/test/cloudinary-test";
 
 export default async function SellerNewProductPage({
 	params,
@@ -13,7 +14,10 @@ export default async function SellerNewProductPage({
 	const subcategories = await getAllSubCategories();
 
 	return (
-		<div className="max-w-6xl mx-auto py-4">
+		<div className="max-w-6xl mx-auto py-4 space-y-6">
+			{/* Temporary test component */}
+			<CloudinaryTest />
+			
 			<ProductDetails
 				categories={categories}
 				subcategories={subcategories}
@@ -21,7 +25,6 @@ export default async function SellerNewProductPage({
 				offerTags={[]}
 				countries={[]}
 			/>
-			;
 		</div>
 	);
 }

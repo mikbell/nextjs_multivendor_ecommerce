@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SubCategoryFormSchema } from "@/lib/schemas";
+import { SubCategoryFormSchema } from "@/lib/schemas/category";
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
 import { v4 as uuidv4 } from "uuid";

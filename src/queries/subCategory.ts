@@ -58,6 +58,7 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
 		return subCategoryDetails;
 	} catch (error) {
 		console.log(error);
+		throw error;
 	}
 };
 

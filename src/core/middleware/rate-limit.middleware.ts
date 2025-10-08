@@ -27,7 +27,7 @@ class RateLimiter {
     // Try to get the real IP address
     const forwarded = req.headers.get('x-forwarded-for');
     const realIp = req.headers.get('x-real-ip');
-    const ip = forwarded?.split(',')[0] || realIp || req.ip || 'unknown';
+    const ip = forwarded?.split(',')[0] || realIp || 'unknown';
     
     // Include user agent for additional fingerprinting
     const userAgent = req.headers.get('user-agent') || '';

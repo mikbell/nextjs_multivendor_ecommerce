@@ -25,11 +25,19 @@ const nextConfig: NextConfig = {
 		minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
 		dangerouslyAllowSVG: true,
 		contentDispositionType: 'attachment',
-		contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+		contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://widget.cloudinary.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
 		remotePatterns: [
 			{
 				protocol: "https",
 				hostname: "res.cloudinary.com",
+			},
+			{
+				protocol: "https",
+				hostname: "widget.cloudinary.com",
+			},
+			{
+				protocol: "https",
+				hostname: "api.cloudinary.com",
 			},
 			{
 				protocol: "https",
@@ -38,6 +46,10 @@ const nextConfig: NextConfig = {
 			{
 				protocol: "https",
 				hostname: "images.unsplash.com",
+			},
+			{
+				protocol: "https",
+				hostname: "picsum.photos",
 			},
 		],
 	},
@@ -56,16 +68,22 @@ const nextConfig: NextConfig = {
 
 			// Bundle analyzer
 			if (process.env.ANALYZE === 'true') {
-				const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-				config.plugins.push(
-					new BundleAnalyzerPlugin({
-						analyzerMode: 'static',
-						openAnalyzer: false,
-						reportFilename: isServer
-							? '../analyze/server.html'
-							: './analyze/client.html',
-					})
-				);
+				try {
+					// Dynamic import for webpack-bundle-analyzer
+					// eslint-disable-next-line @typescript-eslint/no-require-imports
+					const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+					config.plugins.push(
+						new BundleAnalyzerPlugin({
+							analyzerMode: 'static',
+							openAnalyzer: false,
+							reportFilename: isServer
+								? '../analyze/server.html'
+								: './analyze/client.html',
+						})
+					);
+				} catch {
+					console.warn('webpack-bundle-analyzer not installed. Run: npm install --save-dev webpack-bundle-analyzer');
+				}
 			}
 
 			return config;

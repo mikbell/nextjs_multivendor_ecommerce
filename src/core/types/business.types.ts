@@ -1,4 +1,4 @@
-import { Prisma, product_shippingFeeMethod } from "@prisma/client";
+import { Prisma, $Enums } from "@prisma/client";
 import { ProductVariantImage, Size, Color } from "./database.types";
 
 // Enums
@@ -92,7 +92,7 @@ export interface ProductWithVariant {
   questions: { id?: string; question: string; answer: string }[];
   freeShippingForAllCountries: boolean;
   freeShippingCountriesIds: { id?: string; label: string; value: string }[];
-  shippingFeeMethod: product_shippingFeeMethod;
+  shippingFeeMethod: $Enums.ProductShippingFeeMethod;
   createdAt: Date;
   updatedAt: Date;
 }

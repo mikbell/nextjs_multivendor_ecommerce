@@ -1,38 +1,24 @@
 "use client";
 
 import { SubCategory, Category } from "@/generated/prisma";
-import { SubCategoryFormSchema } from "@/lib/schemas";
+import { SubCategoryFormSchema } from "@/lib/schemas/category";
 import { apiClient, ApiClientError } from "@/lib/api-client";
 import { FC, useEffect, useMemo, useState } from "react";
 import * as z from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-	Form,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormControl,
-	FormMessage,
-	FormDescription,
-} from "@/components/ui/form";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import ImageUpload from "@/components/dashboard/shared/image-upload";
+import { Form } from "@/components/ui/form";
 import { FormCard } from "@/components/dashboard/shared/form-card";
-import { v4 as uuid } from "uuid";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import { Textarea } from "@/components/ui/textarea";
+import {
+	SubCategoryImage,
+	CategorySelector,
+	SubCategoryBasicInfo,
+	SubCategoryDescription,
+	SubCategorySettings,
+	SubCategoryFormActions,
+} from "./subCategory-details/index";
 
 interface SubCategoryDetailsProps {
 	data?: SubCategory;
@@ -49,7 +35,7 @@ const SubCategoryDetails: FC<SubCategoryDetailsProps> = ({ data, categories }) =
 			description: data?.description ?? "",
 			image: data?.image ? [{ url: data.image }] : [],
 			slug: data?.slug ?? "",
-			url: (data as any)?.url ?? "",
+			url: (data as SubCategory & { url?: string })?.url ?? "",
 			featured: data?.featured ?? false,
 			categoryId: data?.categoryId ?? "",
 		}),
@@ -70,7 +56,7 @@ const SubCategoryDetails: FC<SubCategoryDetailsProps> = ({ data, categories }) =
 	const handleSubmit = async (values: z.infer<typeof SubCategoryFormSchema>) => {
 		setIsLoading(true);
 		try {
-			const payload: any = {
+			const payload: Record<string, unknown> = {
 				name: values.name,
 				image: values.image || [], // Invia l'array completo come richiesto dallo schema
 				slug: values.slug,
@@ -132,191 +118,23 @@ const SubCategoryDetails: FC<SubCategoryDetailsProps> = ({ data, categories }) =
 					autoComplete="off"
 					suppressHydrationWarning
 				>
-					<FormField
-						control={form.control}
-						name="image"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Immagine sottocategoria</FormLabel>
-								<FormDescription>
-									Carica una sola immagine rappresentativa della sottocategoria.
-								</FormDescription>
-								<FormControl>
-									<ImageUpload
-										type="standard"
-										maxImages={1}
-										uploadText="Carica immagine"
-										removeText="Rimuovi"
-										value={(field.value ?? []).map((image) => image.url)}
-										disabled={isFormLoading}
-										onChange={(urls) => field.onChange(urls.map(url => ({ url })))}
-										onRemove={(url) =>
-											field.onChange(
-												(field.value ?? []).filter(
-													(image) => image.url !== url
-												)
-											)
-										}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					{/* SubCategory Image Section */}
+					<SubCategoryImage form={form} isLoading={isFormLoading} />
 
-					<FormField
-						control={form.control}
-						name="categoryId"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Categoria padre</FormLabel>
-								<FormDescription>
-									Seleziona la categoria a cui appartiene questa sottocategoria.
-								</FormDescription>
-								<Select
-									onValueChange={field.onChange}
-									value={field.value}
-									disabled={isFormLoading}
-								>
-									<FormControl>
-										<SelectTrigger>
-											<SelectValue placeholder="Seleziona una categoria" />
-										</SelectTrigger>
-									</FormControl>
-									<SelectContent>
-										{categories.map((category) => (
-											<SelectItem key={category.id} value={category.id}>
-												{category.name}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
+					{/* Category Selector Section */}
+					<CategorySelector form={form} categories={categories} isLoading={isFormLoading} />
 
-					<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-						<FormField
-							control={form.control}
-							name="name"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Nome sottocategoria</FormLabel>
-									<FormDescription>
-										Il nome verrà mostrato agli utenti e nei menu.
-									</FormDescription>
-									<FormControl>
-										<Input placeholder="Nome sottocategoria" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
+					{/* SubCategory Basic Info Section */}
+					<SubCategoryBasicInfo form={form} />
 
-						<FormField
-							control={form.control}
-							name="slug"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>Slug sottocategoria</FormLabel>
-									<FormDescription>
-										Inserisci lo slug (es. <code>t-shirt-uomo</code>). Niente spazi o caratteri speciali.
-									</FormDescription>
-									<FormControl>
-										<Input placeholder="slug-sottocategoria" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
+					{/* SubCategory Description Section */}
+					<SubCategoryDescription form={form} />
 
-					<div className="grid grid-cols-1 md:grid-cols-1 gap-6">
-						<FormField
-							control={form.control}
-							name="url"
-							render={({ field }) => (
-								<FormItem>
-									<FormLabel>URL sottocategoria</FormLabel>
-									<FormDescription>
-										URL identificativo per la sottocategoria (es. <code>t-shirt-casual</code>).
-									</FormDescription>
-									<FormControl>
-										<Input placeholder="url-sottocategoria" {...field} />
-									</FormControl>
-									<FormMessage />
-								</FormItem>
-							)}
-						/>
-					</div>
+					{/* SubCategory Settings Section */}
+					<SubCategorySettings form={form} />
 
-					<FormField
-						control={form.control}
-						name="description"
-						render={({ field }) => (
-							<FormItem>
-								<FormLabel>Descrizione sottocategoria</FormLabel>
-								<FormDescription>
-									La descrizione verrà mostrata agli utenti per spiegare il tipo specifico di prodotti.
-								</FormDescription>
-								<FormControl>
-									<Textarea
-										placeholder="Descrivi questa sottocategoria..."
-										className="min-h-[100px]"
-										{...field}
-									/>
-								</FormControl>
-								<FormMessage />
-							</FormItem>
-						)}
-					/>
-
-					<FormField
-						control={form.control}
-						name="featured"
-						render={({ field }) => (
-							<FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
-								<FormControl>
-									<Checkbox
-										checked={field.value}
-										onCheckedChange={(checked) =>
-											field.onChange(checked === true)
-										}
-										onBlur={field.onBlur}
-										name={field.name}
-										ref={field.ref}
-									/>
-								</FormControl>
-								<div className="space-y-1 leading-none">
-									<FormLabel>Sottocategoria in evidenza</FormLabel>
-									<FormDescription>
-										Le sottocategorie in evidenza vengono mostrate nelle sezioni principali della categoria.
-									</FormDescription>
-								</div>
-							</FormItem>
-						)}
-					/>
-
-					<Separator className="my-6" />
-
-					<div className="flex justify-end gap-3">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => router.back()}
-							disabled={isFormLoading}
-						>
-							Annulla
-						</Button>
-						<Button
-							type="submit"
-							disabled={isFormLoading}
-							size="default"
-						>
-							{isFormLoading ? "Salvataggio..." : "Salva sottocategoria"}
-						</Button>
-					</div>
+					{/* Form Actions Section */}
+					<SubCategoryFormActions isLoading={isFormLoading} />
 				</form>
 			</Form>
 		</FormCard>

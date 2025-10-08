@@ -1,5 +1,5 @@
 import * as z from "zod";
-import { product_shippingFeeMethod } from "@prisma/client";
+import { $Enums } from "@prisma/client";
 import { 
   requiredString, 
   description, 
@@ -134,7 +134,7 @@ export const ProductFormSchema = z.object({
       "Ogni paese deve avere un nome e ID validi"
     ),
   
-  shippingFeeMethod: z.nativeEnum(product_shippingFeeMethod),
+  shippingFeeMethod: z.nativeEnum($Enums.ProductShippingFeeMethod),
 });
 
 // Add review schema

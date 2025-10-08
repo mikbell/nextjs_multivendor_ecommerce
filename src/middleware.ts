@@ -26,7 +26,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 	// Content Security Policy
 	response.headers.set(
 		'Content-Security-Policy',
-		"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://api.clerk.com https://*.clerk.accounts.dev; frame-src https://clerk.com https://*.clerk.accounts.dev;"
+		"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://clerk.com https://*.clerk.accounts.dev https://widget.cloudinary.com; style-src 'self' 'unsafe-inline' https://widget.cloudinary.com https://fonts.googleapis.com; img-src 'self' data: https: blob:; font-src 'self' data: https://fonts.gstatic.com; connect-src 'self' data: https://api.clerk.com https://*.clerk.accounts.dev https://api.cloudinary.com https://*.cloudinary.com https://widget.cloudinary.com; frame-src https://clerk.com https://*.clerk.accounts.dev https://widget.cloudinary.com;"
 	);
 	
 	// Other security headers
@@ -48,7 +48,7 @@ function addSecurityHeaders(response: NextResponse): NextResponse {
 function logSuspiciousActivity(request: NextRequest, reason: string): void {
 	const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
 		request.headers.get('x-real-ip') || 
-		request.ip || 'unknown';
+		'unknown';
 	
 	console.warn(`[SECURITY] Suspicious activity from ${ip}: ${reason}`, {
 		url: request.url,
