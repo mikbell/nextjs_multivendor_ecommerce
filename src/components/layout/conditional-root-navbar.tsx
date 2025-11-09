@@ -1,12 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Header } from "./header";
+import Navbar from "./navbar";
 
-export function ConditionalRootHeader() {
+export default function ConditionalRootNavbar() {
   const pathname = usePathname();
 
-  // Hide the public/shared header on admin dashboard routes
   if (
     pathname?.startsWith("/dashboard/admin") ||
     pathname?.startsWith("/dashboard/seller")
@@ -14,5 +13,5 @@ export function ConditionalRootHeader() {
     return null;
   }
 
-  return <Header />;
+  return <Navbar />;
 }

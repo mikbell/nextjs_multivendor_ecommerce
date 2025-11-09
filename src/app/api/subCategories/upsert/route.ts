@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     if (body.id) {
       // Update existing subcategory
-      subCategory = await db.subcategory.update({
+      subCategory = await db.subCategory.update({
         where: { id: body.id },
         data: {
           ...subCategoryData,
@@ -63,7 +63,7 @@ export async function POST(request: NextRequest) {
       });
     } else {
       // Create new subcategory
-      subCategory = await db.subcategory.create({
+      subCategory = await db.subCategory.create({
         data: {
           ...subCategoryData,
           id: uuidv4(),

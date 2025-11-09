@@ -1,31 +1,32 @@
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV === 'development';
-const isProd = process.env.NODE_ENV === 'production';
+const isDev = process.env.NODE_ENV === "development";
+const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
 	// Enable experimental features
 	experimental: {
-		optimizePackageImports: ['@radix-ui/react-icons', 'lucide-react'],
+		optimizePackageImports: ["@radix-ui/react-icons", "lucide-react"],
 	},
 
 	// Server external packages (moved from experimental)
-	serverExternalPackages: ['@prisma/client'],
+	serverExternalPackages: ["@prisma/client"],
 
 	// Compiler optimizations
 	compiler: {
-		removeConsole: isProd ? { exclude: ['error', 'warn'] } : false,
+		removeConsole: isProd ? { exclude: ["error", "warn"] } : false,
 	},
 
 	// Image optimization
 	images: {
 		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
 		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-		formats: ['image/avif', 'image/webp'],
+		formats: ["image/avif", "image/webp"],
 		minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
 		dangerouslyAllowSVG: true,
-		contentDispositionType: 'attachment',
-		contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://widget.cloudinary.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
+		contentDispositionType: "attachment",
+		contentSecurityPolicy:
+			"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://widget.cloudinary.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
 		remotePatterns: [
 			{
 				protocol: "https",
@@ -51,11 +52,19 @@ const nextConfig: NextConfig = {
 				protocol: "https",
 				hostname: "picsum.photos",
 			},
+			{
+				protocol: "https",
+				hostname: "img.clerk.com",
+			},
+			{
+				protocol: "https",
+				hostname: "images.clerk.dev",
+			},
 		],
 	},
 
 	// Bundle analyzer
-	...(process.env.ANALYZE === 'true' && {
+	...(process.env.ANALYZE === "true" && {
 		webpack: (config: any, { isServer }: { isServer: boolean }) => {
 			if (!isServer) {
 				config.resolve.fallback = {
@@ -67,22 +76,24 @@ const nextConfig: NextConfig = {
 			}
 
 			// Bundle analyzer
-			if (process.env.ANALYZE === 'true') {
+			if (process.env.ANALYZE === "true") {
 				try {
 					// Dynamic import for webpack-bundle-analyzer
 					// eslint-disable-next-line @typescript-eslint/no-require-imports
-					const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+					const { BundleAnalyzerPlugin } = require("webpack-bundle-analyzer");
 					config.plugins.push(
 						new BundleAnalyzerPlugin({
-							analyzerMode: 'static',
+							analyzerMode: "static",
 							openAnalyzer: false,
 							reportFilename: isServer
-								? '../analyze/server.html'
-								: './analyze/client.html',
+								? "../analyze/server.html"
+								: "./analyze/client.html",
 						})
 					);
 				} catch {
-					console.warn('webpack-bundle-analyzer not installed. Run: npm install --save-dev webpack-bundle-analyzer');
+					console.warn(
+						"webpack-bundle-analyzer not installed. Run: npm install --save-dev webpack-bundle-analyzer"
+					);
 				}
 			}
 
@@ -94,37 +105,37 @@ const nextConfig: NextConfig = {
 	async headers() {
 		return [
 			{
-				source: '/(.*)',
+				source: "/(.*)",
 				headers: [
 					{
-						key: 'X-Content-Type-Options',
-						value: 'nosniff',
+						key: "X-Content-Type-Options",
+						value: "nosniff",
 					},
 					{
-						key: 'X-Frame-Options',
-						value: 'DENY',
+						key: "X-Frame-Options",
+						value: "DENY",
 					},
 					{
-						key: 'Referrer-Policy',
-						value: 'strict-origin-when-cross-origin',
+						key: "Referrer-Policy",
+						value: "strict-origin-when-cross-origin",
 					},
 				],
 			},
 			{
-				source: '/api/(.*)',
+				source: "/api/(.*)",
 				headers: [
 					{
-						key: 'Cache-Control',
-						value: 'public, s-maxage=60, stale-while-revalidate=300',
+						key: "Cache-Control",
+						value: "public, s-maxage=60, stale-while-revalidate=300",
 					},
 				],
 			},
 			{
-				source: '/_next/static/(.*)',
+				source: "/_next/static/(.*)",
 				headers: [
 					{
-						key: 'Cache-Control',
-						value: 'public, max-age=31536000, immutable',
+						key: "Cache-Control",
+						value: "public, max-age=31536000, immutable",
 					},
 				],
 			},
@@ -135,8 +146,8 @@ const nextConfig: NextConfig = {
 	async redirects() {
 		return [
 			{
-				source: '/home',
-				destination: '/',
+				source: "/home",
+				destination: "/",
 				permanent: true,
 			},
 		];
@@ -147,12 +158,12 @@ const nextConfig: NextConfig = {
 		return {
 			beforeFiles: [
 				{
-					source: '/sitemap.xml',
-					destination: '/api/sitemap',
+					source: "/sitemap.xml",
+					destination: "/api/sitemap",
 				},
 				{
-					source: '/robots.txt',
-					destination: '/api/robots',
+					source: "/robots.txt",
+					destination: "/api/robots",
 				},
 			],
 			afterFiles: [],
@@ -163,9 +174,8 @@ const nextConfig: NextConfig = {
 	// Compress responses
 	compress: true,
 
-
 	// Output configuration
-	output: 'standalone',
+	output: "standalone",
 
 	// Disable x-powered-by header
 	poweredByHeader: false,
@@ -179,11 +189,6 @@ const nextConfig: NextConfig = {
 	// TypeScript configuration
 	typescript: {
 		ignoreBuildErrors: false,
-	},
-
-	// ESLint configuration
-	eslint: {
-		ignoreDuringBuilds: false,
 	},
 };
 

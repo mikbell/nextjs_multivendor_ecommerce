@@ -451,7 +451,7 @@ export const placeOrder = async (
 			// Calculate Shipping details
 			const countryId = shippingAddress.countryId;
 
-			const temp_country = await db.country.findUnique({
+			const temp_country = await db.Country.findUnique({
 				where: {
 					id: countryId,
 				},

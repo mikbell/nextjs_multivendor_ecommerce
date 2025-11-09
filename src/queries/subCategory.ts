@@ -20,7 +20,7 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
 			throw new Error("Dati sotto-categoria non forniti.");
 		}
 
-		const existingSubCategory = await db.subcategory.findFirst({
+		const existingSubCategory = await db.subCategory.findFirst({
 			where: {
 				AND: [
 					{
@@ -47,7 +47,7 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
 			throw new Error(errorMessage);
 		}
 
-		const subCategoryDetails = await db.subcategory.upsert({
+		const subCategoryDetails = await db.subCategory.upsert({
 			where: {
 				id: subCategory.id,
 			},
@@ -65,7 +65,7 @@ export const upsertSubCategory = async (subCategory: SubCategory) => {
 export const getAllSubCategories = async () => {
 	try {
 		const [subCategories, categories] = await Promise.all([
-			db.subcategory.findMany({
+			db.subCategory.findMany({
 				orderBy: {
 					name: "asc",
 				},
@@ -98,7 +98,7 @@ export const getAllSubCategories = async () => {
 export const getSubCategoryById = async (id: string) => {
 	try {
 		if (!id) throw new Error("ID categoria mancante");
-		const subCategory = await db.subcategory.findUnique({
+		const subCategory = await db.subCategory.findUnique({
 			where: { id },
 		});
 		return subCategory || null;

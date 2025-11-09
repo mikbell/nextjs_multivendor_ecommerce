@@ -57,7 +57,7 @@ export async function DELETE(
     }
 
     // Verifica se ci sono sottocategorie collegate
-    const subCategoriesCount = await db.subcategory.count({
+    const subCategoriesCount = await db.subCategory.count({
       where: { categoryId: categoryId },
     });
 

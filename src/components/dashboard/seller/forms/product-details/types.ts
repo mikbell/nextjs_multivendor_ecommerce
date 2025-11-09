@@ -1,4 +1,4 @@
-import { category, country, offertag, subcategory } from "@prisma/client";
+import { Category, Country, OfferTag, SubCategory } from "@prisma/client";
 import { UseFormReturn } from "react-hook-form";
 import { ProductFormSchema } from "@/lib/schemas";
 import { ProductWithVariantType } from "@/lib/types";
@@ -17,19 +17,19 @@ export interface BaseFormProps {
 // Props for the main ProductDetails component
 export interface ProductDetailsProps {
   data?: Partial<ProductWithVariantType>;
-  categories: category[];
-  subcategories: subcategory[];
-  offerTags: offertag[];
+  categories: Category[];
+  subcategories: SubCategory[];
+  offerTags: OfferTag[];
   storeUrl: string;
-  countries: country[];
+  countries: Country[];
 }
 
 // Props for ProductBasicInfo component
 export interface ProductBasicInfoProps extends BaseFormProps {
   data?: Partial<ProductWithVariantType>;
-  categories: category[];
-  subcategories: subcategory[];
-  subCategories: subcategory[];
+  categories: Category[];
+  subcategories: SubCategory[];
+  subCategories: SubCategory[];
 }
 
 // Props for ProductImages component
@@ -62,7 +62,7 @@ export interface ProductSpecsProps extends BaseFormProps {
 
 // Props for ShippingSettings component
 export interface ShippingSettingsProps extends BaseFormProps {
-  countries: country[];
+  countries: Country[];
   countryOptions: { label: string; value: string }[];
   handleDeleteCountryFreeShipping: (index: number) => void;
 }

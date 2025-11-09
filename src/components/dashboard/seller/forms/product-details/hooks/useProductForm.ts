@@ -18,14 +18,14 @@ import { upsertProduct } from "@/queries/product";
 import { getAllCategoriesForCategory } from "@/queries/category";
 
 // Types
-import { category, country, offertag, subcategory } from "@prisma/client";
+import { Category, Country, OfferTag, SubCategory } from "@prisma/client";
 
 interface UseProductFormProps {
   data?: Partial<ProductWithVariantType>;
-  categories: category[];
-  offerTags: offertag[];
+  categories: Category[];
+  offerTags: OfferTag[];
   storeUrl: string;
-  countries: country[];
+  countries: Country[];
 }
 
 export const useProductForm = ({
@@ -42,7 +42,7 @@ export const useProductForm = ({
   const debugForceShowAllFields = process.env.NODE_ENV === "development" && false;
 
   // State for subCategories
-  const [subCategories, setSubCategories] = useState<subcategory[]>([]);
+  const [subCategories, setSubCategories] = useState<SubCategory[]>([]);
 
   // State for colors
   const [colors, setColors] = useState<{ color: string }[]>(

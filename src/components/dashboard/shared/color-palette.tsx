@@ -38,7 +38,7 @@ const ColorPalette: FC<ColorPaletteProps> = ({
 	const Color = ({ color }: { color: string }) => {
 		return (
 			<div
-				className="w-20 h-[80px] cursor-pointer transition-all duration-100 ease-linear relative hover:w-[120px] hover:duration-300"
+				className="w-20 h-20 cursor-pointer transition-all duration-100 ease-linear relative hover:w-[120px] hover:duration-300"
 				style={{ backgroundColor: color }}
 				onMouseEnter={() => setActiveColor(color)}
 				onClick={() => handleAddProductColor(color)}>
@@ -50,7 +50,7 @@ const ColorPalette: FC<ColorPaletteProps> = ({
 		);
 	};
 	return (
-		<div className="pt-10 w-[320px] h-[160px] rounded-b-md overflow-hidden">
+		<div className="pt-10 w-[320px] h-40 rounded-b-md overflow-hidden">
 			{/* Color palette container */}
 			<div className="w-[320px] h-[180px] rounded-md perspective-1000">
 				{/* Active color display */}
@@ -73,7 +73,7 @@ const ColorPalette: FC<ColorPaletteProps> = ({
 					</div>
 				</div>
 				{/* Color blocks */}
-				<div className="w-full h-[180px] absolute bottom-0 !flex items-center justify-center">
+				<div className="w-full h-[180px] absolute bottom-0 flex! items-center justify-center">
 					{/* Map over colors to display color blocks */}
 					{extractedColors?.map((color, index) => (
 						<Color key={index} color={color} />

@@ -143,3 +143,150 @@ export const updateOrderItemStatus = async (
 
 	return updatedProduct.status;
 };
+
+// Function: getAllOrdersForAdmin
+// Description: Retrieves all orders for admin dashboard with user and shipping information.
+// Permission Level: Admin only
+// Returns: Array of orders with related data.
+export const getAllOrdersForAdmin = async () => {
+	try {
+		// Get current user
+		const user = await currentUser();
+
+		// Ensure user is authenticated
+		if (!user) throw new Error("Unauthenticated.");
+
+		// Verify admin permission
+		if (user.privateMetadata.role !== "ADMIN") {
+			throw new Error(
+				"Unauthorized Access: Admin Privileges Required to View Orders."
+			);
+		}
+
+		// Fetch all orders with related data
+		const orders = await db.order.findMany({
+			include: {
+				user: {
+					select: {
+						id: true,
+						name: true,
+						email: true,
+					},
+				},
+				shippingAddress: {
+					select: {
+						firstName: true,
+						lastName: true,
+						city: true,
+						state: true,
+						countryId: true,
+					},
+				},
+				orderGroups: {
+					include: {
+						store: {
+							select: {
+								id: true,
+								name: true,
+							},
+						},
+						_count: {
+							select: {
+								items: true,
+							},
+						},
+					},
+				},
+				_count: {
+					select: {
+						orderGroups: true,
+					},
+				},
+			},
+			orderBy: {
+				createdAt: "desc",
+			},
+		});
+
+		return orders;
+	} catch (error) {
+		// Log and re-throw any errors
+		console.log(error);
+		throw error;
+	}
+};
+
+// Function: getOrderDetailsForAdmin
+// Description: Retrieves complete order details for admin view including all order groups and items.
+// Permission Level: Admin only
+// Parameters:
+//   - orderId: The ID of the order to fetch.
+// Returns: Detailed order information with all related data.
+export const getOrderDetailsForAdmin = async (orderId: string) => {
+	try {
+		// Get current user
+		const user = await currentUser();
+
+		// Ensure user is authenticated
+		if (!user) throw new Error("Unauthenticated.");
+
+		// Verify admin permission
+		if (user.privateMetadata.role !== "ADMIN") {
+			throw new Error(
+				"Unauthorized Access: Admin Privileges Required to View Order Details."
+			);
+		}
+
+		// Fetch the order with complete information
+		const order = await db.order.findUnique({
+			where: {
+				id: orderId,
+			},
+			include: {
+				user: {
+					select: {
+						id: true,
+						name: true,
+						email: true,
+						picture: true,
+						createdAt: true,
+					},
+				},
+				shippingAddress: true,
+				orderGroups: {
+					include: {
+						store: {
+							select: {
+								id: true,
+								name: true,
+								logo: true,
+								url: true,
+							},
+						},
+						items: {
+							include: {
+								product: {
+									select: {
+										id: true,
+										name: true,
+										slug: true,
+									},
+								},
+							},
+						},
+					},
+				},
+				paymentDetails: true,
+			},
+		});
+
+		// Throw an error if the order is not found
+		if (!order) throw new Error("Order not found.");
+
+		return order;
+	} catch (error) {
+		// Log and re-throw any errors
+		console.log(error);
+		throw error;
+	}
+};

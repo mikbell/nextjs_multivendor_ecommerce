@@ -3,17 +3,17 @@
 // Import the new refactored component
 import ProductDetailsForm from './product-details/ProductDetailsForm';
 import { FC } from 'react';
-import { category, country, offertag, subcategory } from "@prisma/client";
+import { Category, Country, OfferTag, SubCategory } from "@prisma/client";
 import { ProductWithVariantType } from "@/lib/types";
 
 // Interface for backwards compatibility
 interface ProductDetailsProps {
 	data?: Partial<ProductWithVariantType>;
-	categories: category[];
-	subcategories: subcategory[];
-	offerTags: offertag[];
+	categories: Category[];
+	subcategories: SubCategory[];
+	offerTags: OfferTag[];
 	storeUrl: string;
-	countries: country[];
+	countries: Country[];
 }
 
 // Wrapper component for backwards compatibility

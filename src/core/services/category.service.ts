@@ -32,7 +32,7 @@ export class CategoryService {
     const { page = 1, limit = 10, featured, search } = params || {};
     const skip = (page - 1) * limit;
 
-    const where: Prisma.categoryWhereInput = {
+    const where: Prisma.CategoryWhereInput = {
       ...(featured !== undefined && { featured }),
       ...(search && {
         OR: [
@@ -97,7 +97,7 @@ export class CategoryService {
       return null;
     }
 
-    const subCategories = await db.subcategory.findMany({
+    const subCategories = await db.subCategory.findMany({
       where: {
         categoryId: category.id
       },
@@ -193,7 +193,7 @@ export class CategoryService {
    */
   static async deleteCategory(id: string): Promise<void> {
     // Check if category has subcategories
-    const subCategoriesCount = await db.subcategory.count({
+    const subCategoriesCount = await db.subCategory.count({
       where: { categoryId: id }
     });
 
@@ -229,19 +229,19 @@ export class CategoryService {
     const { page = 1, limit = 10, featured } = params || {};
     const skip = (page - 1) * limit;
 
-    const where: Prisma.subcategoryWhereInput = {
+    const where: Prisma.SubCategoryWhereInput = {
       categoryId,
       ...(featured !== undefined && { featured })
     };
 
     const [subCategories, totalCount] = await Promise.all([
-      db.subcategory.findMany({
+      db.subCategory.findMany({
         where,
         skip,
         take: limit,
         orderBy: { name: 'asc' }
       }),
-      db.subcategory.count({ where })
+      db.subCategory.count({ where })
     ]);
 
     return {
@@ -270,7 +270,7 @@ export class CategoryService {
     }
 
     // Check slug uniqueness
-    const existingSubCategory = await db.subcategory.findFirst({
+    const existingSubCategory = await db.subCategory.findFirst({
       where: {
         OR: [
           { slug: data.slug },
@@ -283,7 +283,7 @@ export class CategoryService {
       throw new Error('Sottocategoria con questo slug o URL già esistente');
     }
 
-    return db.subcategory.create({
+    return db.subCategory.create({
       data: {
         id: generateId(),
         name: data.name,

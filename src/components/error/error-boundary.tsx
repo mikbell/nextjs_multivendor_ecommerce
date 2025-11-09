@@ -68,7 +68,7 @@ export class BaseErrorBoundary extends Component<ErrorBoundaryProps, ErrorBounda
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     const errorBoundaryError: ErrorBoundaryError = {
       message: error.message,
       stack: error.stack,
@@ -92,7 +92,7 @@ export class BaseErrorBoundary extends Component<ErrorBoundaryProps, ErrorBounda
     });
   }
 
-  componentDidUpdate(prevProps: ErrorBoundaryProps) {
+  override componentDidUpdate(prevProps: ErrorBoundaryProps) {
     const { resetKeys, resetOnPropsChange } = this.props;
     const { hasError } = this.state;
 
@@ -116,7 +116,7 @@ export class BaseErrorBoundary extends Component<ErrorBoundaryProps, ErrorBounda
     }
   }
 
-  componentWillUnmount() {
+  override componentWillUnmount() {
     if (this.resetTimeoutId) {
       clearTimeout(this.resetTimeoutId);
     }
@@ -158,7 +158,7 @@ export class BaseErrorBoundary extends Component<ErrorBoundaryProps, ErrorBounda
     );
   };
 
-  render() {
+  override render() {
     const { hasError, error, retryCount } = this.state;
     const { 
       children, 

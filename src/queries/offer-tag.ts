@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { currentUser } from "@clerk/nextjs/server";
-import { offertag as OfferTag } from "@prisma/client";
+import { OfferTag } from "@prisma/client";
 
 // Function: getAllOfferTags
 // Description: Retrieves all offer tags from the database.
@@ -27,7 +27,7 @@ export const getAllOfferTags = async (storeUrl?: string) => {
 
 	// Retrieve all offer tags from the database
 	// Simplified query without relations for now
-	const offerTgas = await db.offertag.findMany({
+	const offerTgas = await db.offerTag.findMany({
 		orderBy: {
 			updatedAt: "desc",
 		},
@@ -58,8 +58,8 @@ export const upsertOfferTag = async (offerTag: OfferTag) => {
 		// Ensure offer tag data is provided
 		if (!offerTag) throw new Error("Please provide offer tag data.");
 
-		// Throw error if offer tag with the same name or URL already exists
-		const existingOfferTag = await db.offertag.findFirst({
+	// Throw error if offer tag with the same name or URL already exists
+	const existingOfferTag = await db.offerTag.findFirst({
 			where: {
 				AND: [
 					{
@@ -85,8 +85,8 @@ export const upsertOfferTag = async (offerTag: OfferTag) => {
 			throw new Error(errorMessage);
 		}
 
-		// Upsert offer tag into the database
-		const offerTagDetails = await db.offertag.upsert({
+	// Upsert offer tag into the database
+	const offerTagDetails = await db.offerTag.upsert({
 			where: {
 				id: offerTag.id,
 			},
@@ -112,7 +112,7 @@ export const getOfferTag = async (offerTagId: string) => {
 	if (!offerTagId) throw new Error("Please provide offer tag ID.");
 
 	// Retrieve the offer tag from the database using the provided ID
-	const offerTag = await db.offertag.findUnique({
+	const offerTag = await db.offerTag.findUnique({
 		where: {
 			id: offerTagId,
 		},
@@ -145,8 +145,8 @@ export const deleteOfferTag = async (offerTagId: string) => {
 		// Ensure the offerTagId is provided
 		if (!offerTagId) throw new Error("Please provide the offer tag ID.");
 
-		// Delete offer tag from the database
-		const response = await db.offertag.delete({
+	// Delete offer tag from the database
+	const response = await db.offerTag.delete({
 			where: {
 				id: offerTagId,
 			},

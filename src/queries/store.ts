@@ -259,15 +259,15 @@ export const getStoreShippingRates = async (storeUrl: string) => {
 
 		if (!store) throw new Error("Store could not be found.");
 
-		// Retrieve all countries
-		const countries = await db.country.findMany({
+	// Retrieve all countries
+	const countries = await db.Country.findMany({
 			orderBy: {
 				name: "asc",
 			},
 		});
 
-		// Retrieve all shipping rates for the specified store
-		const shippingRates = await db.shippingrate.findMany({
+	// Retrieve all shipping rates for the specified store
+	const shippingRates = await db.shippingRate.findMany({
 			where: {
 				storeId: store.id,
 			},
@@ -346,8 +346,8 @@ export const upsertShippingRate = async (
 		});
 		if (!store) throw new Error("Please provide a valid store URL.");
 
-		// Upsert the shipping rate into the database
-		const shippingRateDetails = await db.shippingrate.upsert({
+	// Upsert the shipping rate into the database
+	const shippingRateDetails = await db.shippingRate.upsert({
 			where: {
 				id: shippingRate.id,
 			},
@@ -627,4 +627,78 @@ export const getStorePageDetails = async (storeUrl: string) => {
 		throw new Error(`Store with URL "${storeUrl}" not found.`);
 	}
 	return store;
+};
+
+// Function: getStoreDetailsForAdmin
+// Description: Retrieves complete store details for admin view including user and product information.
+// Permission Level: Admin only
+// Parameters:
+//   - storeId: The ID of the store to fetch.
+// Returns: Detailed store information with related data.
+export const getStoreDetailsForAdmin = async (storeId: string) => {
+	try {
+		// Get current user
+		const user = await currentUser();
+
+		// Ensure user is authenticated
+		if (!user) throw new Error("Unauthenticated.");
+
+		// Verify admin permission
+		if (user.privateMetadata.role !== "ADMIN") {
+			throw new Error(
+				"Unauthorized Access: Admin Privileges Required to View Store Details."
+			);
+		}
+
+		// Fetch the store with detailed information
+		const store = await db.store.findUnique({
+			where: {
+				id: storeId,
+			},
+			include: {
+				user: {
+					select: {
+						id: true,
+						name: true,
+						email: true,
+						picture: true,
+						role: true,
+						createdAt: true,
+					},
+				},
+				products: {
+					select: {
+						id: true,
+						name: true,
+						slug: true,
+						rating: true,
+						sales: true,
+						views: true,
+						isActive: true,
+						createdAt: true,
+					},
+					take: 10,
+					orderBy: {
+						sales: "desc",
+					},
+				},
+				_count: {
+					select: {
+						products: true,
+						orderGroups: true,
+						followers: true,
+					},
+				},
+			},
+		});
+
+		// Throw an error if the store is not found
+		if (!store) throw new Error("Store not found.");
+
+		return store;
+	} catch (error) {
+		// Log and re-throw any errors
+		console.log(error);
+		throw error;
+	}
 };

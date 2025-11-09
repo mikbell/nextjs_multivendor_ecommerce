@@ -4,7 +4,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { UserService } from '@/lib/services/user-service';
 import { ApiErrors, ApiException, createErrorResponse, createValidationErrorResponse } from './types';
 import { logger } from '@/lib/logger';
-import { user_role } from '@prisma/client';
+import { UserRole } from '@prisma/client';
 
 // Authentication middleware
 export async function withAuth(
@@ -30,7 +30,7 @@ export async function withAuth(
 }
 
 // Role-based authorization middleware
-export function withRole(requiredRole: user_role) {
+export function withRole(requiredRole: UserRole) {
   return function (
     handler: (request: NextRequest, user: any) => Promise<Response>
   ) {
@@ -98,7 +98,7 @@ export function withValidation<T>(schema: ZodSchema<T>) {
       } catch (error) {
         if (error instanceof ZodError) {
           const errors: Record<string, string[]> = {};
-          error.errors.forEach((err) => {
+          error.issues.forEach((err) => {
             const path = err.path.join('.');
             if (!errors[path]) {
               errors[path] = [];
@@ -131,7 +131,7 @@ export function withRateLimit(
   ) {
     return async (request: NextRequest) => {
       try {
-        const identifier = request.ip || 'anonymous';
+        const identifier = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'anonymous';
         const now = Date.now();
         const windowStart = now - windowMs;
 

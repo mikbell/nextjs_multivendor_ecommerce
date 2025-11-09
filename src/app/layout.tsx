@@ -3,7 +3,8 @@ import { Inter, Barlow } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ConditionalRootHeader } from "@/components/shared/conditional-root-header";
+import ConditionalRootNavbar from "@/components/layout/conditional-root-navbar";
+import Footer from "@/components/layout/footer";
 import { Toaster } from "@/components/ui/sonner";
 
 const interFont = Inter({
@@ -29,14 +30,26 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<ClerkProvider afterSignOutUrl="/">
+		<ClerkProvider
+			afterSignOutUrl="/"
+			
+			appearance={{
+				elements: {
+					rootBox: "flex justify-center items-center",
+				},
+			}}>
 			<html lang="it" className="dark" suppressHydrationWarning>
 				<body
 					className={`${interFont.variable} ${barlowFont.variable} antialiased`}>
 					<ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-						<ConditionalRootHeader />
-						{children}
-						<Toaster position="bottom-right" />
+						<div className="flex min-h-screen flex-col">
+							<ConditionalRootNavbar />
+							<main className="container mx-auto my-8 md:my-12 grow">
+								{children}
+							</main>
+							<Footer />
+							<Toaster position="bottom-right" />
+						</div>
 					</ThemeProvider>
 				</body>
 			</html>

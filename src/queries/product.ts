@@ -910,7 +910,7 @@ export const getShippingDetails = async (
 		city: userCountry.city,
 		isFreeShipping: false,
 	};
-	const country = await db.country.findUnique({
+	const country = await db.Country.findUnique({
 		where: {
 			name: userCountry.name,
 			code: userCountry.code,
@@ -919,7 +919,7 @@ export const getShippingDetails = async (
 
 	if (country) {
 		// Retrieve shipping rate for the country
-		const shippingRate = await db.shippingrate.findFirst({
+		const shippingRate = await db.shippingRate.findFirst({
 			where: {
 				countryId: country.id,
 				storeId: store.id,
@@ -1058,7 +1058,7 @@ export const getDeliveryDetailsForStoreByCountry = async (
 	countryId: string
 ) => {
 	// Get shipping rate
-	const shippingRate = await db.shippingrate.findFirst({
+	const shippingRate = await db.shippingRate.findFirst({
 		where: {
 			countryId,
 			storeId,
@@ -1118,7 +1118,7 @@ export const getProductShippingFee = async (
 	quantity: number
 ) => {
 	// Fetch country information based on userCountry.name and userCountry.code
-	const country = await db.country.findUnique({
+	const country = await db.Country.findUnique({
 		where: {
 			name: userCountry.name,
 			code: userCountry.code,
@@ -1138,7 +1138,7 @@ export const getProductShippingFee = async (
 		}
 
 		// Fetch shipping rate from the database for the given store and country
-		const shippingRate = await db.shippingrate.findFirst({
+		const shippingRate = await db.shippingRate.findFirst({
 			where: {
 				countryId: country.id,
 				storeId: store.id,
@@ -1211,7 +1211,7 @@ export const getProductsByIds = async (
 
 	try {
 		// Query the database for products with the specified ids
-		const variants = await db.productvariant.findMany({
+		const variants = await db.productVariant.findMany({
 			where: {
 				id: {
 					in: ids, // Filter products whose idds are in the provided array

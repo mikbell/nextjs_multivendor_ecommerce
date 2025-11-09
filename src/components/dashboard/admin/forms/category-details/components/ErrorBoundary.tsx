@@ -44,7 +44,7 @@ export class CategoryFormErrorBoundary extends Component<ErrorBoundaryProps, Err
     };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+  override componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // Log error details
     console.error('CategoryForm Error Boundary caught an error:', {
       error: error.message,
@@ -113,7 +113,7 @@ export class CategoryFormErrorBoundary extends Component<ErrorBoundaryProps, Err
     return 'medium';
   }
 
-  render() {
+  override render() {
     if (this.state.hasError) {
       // Custom fallback UI
       if (this.props.fallback) {
