@@ -1,4 +1,4 @@
-import React from "react";
+import Heading from "@/components/shared/heading";
 import { getAllCouponsForAdmin } from "@/queries/coupon";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/dashboard/admin/coupons/columns";
@@ -31,7 +31,7 @@ export default async function CouponsPage() {
 			<div className="flex flex-col gap-6 p-6">
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Coupon</h1>
+						<Heading>Coupon</Heading>
 						<p className="text-muted-foreground">
 							Visualizza e gestisci tutti i coupon della piattaforma
 						</p>
@@ -81,7 +81,8 @@ export default async function CouponsPage() {
 						<CardContent>
 							<div className="text-2xl font-bold">{totalUsage}</div>
 							<p className="text-xs text-muted-foreground">
-								Media: {(totalUsage / coupons.length || 0).toFixed(1)} per coupon
+								Media: {(totalUsage / coupons.length || 0).toFixed(1)} per
+								coupon
 							</p>
 						</CardContent>
 					</Card>
@@ -111,6 +112,7 @@ export default async function CouponsPage() {
 			</div>
 		);
 	} catch (error) {
+		console.error("Error fetching coupons:", error);
 		return (
 			<div className="flex flex-col gap-6 p-6">
 				<Card>

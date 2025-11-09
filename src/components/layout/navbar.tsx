@@ -6,7 +6,7 @@ import {
 	UserButton,
 } from "@clerk/nextjs";
 import { Button } from "../ui/button";
-import { ThemeToggle } from "./theme-toggle";
+import { ModeToggle } from "./mode-toggle";
 import { Logo } from "../shared/logo";
 import { SearchBar } from "./search-bar";
 import Link from "next/link";
@@ -68,7 +68,7 @@ export default function Navbar() {
 								<UserButton />
 							</SignedIn>
 						</div>
-						<ThemeToggle />
+						<ModeToggle />
 
 						{/* Mobile Menu Button */}
 						<Button

@@ -7,6 +7,7 @@ import {
 	getHomeFeaturedCategories,
 	getHomeFeaturedProducts,
 } from "@/queries/home";
+import Heading from "@/components/shared/heading";
 
 export default async function Home() {
 	const [categories, products] = await Promise.all([
@@ -23,9 +24,9 @@ export default async function Home() {
 						<TrendingUp className="h-4 w-4" />
 						Nuovo su GoShop
 					</div>
-					<h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+					<Heading>
 						Scopri il meglio dell&apos;e-commerce
-					</h1>
+					</Heading>
 					<p className="text-lg text-muted-foreground md:text-xl">
 						Migliaia di prodotti dai migliori venditori. Prezzi competitivi,
 						consegna veloce e assistenza dedicata.

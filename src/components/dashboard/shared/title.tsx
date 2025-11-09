@@ -1,3 +1,4 @@
+import Heading from "@/components/shared/heading";
 import { cn } from "@/lib/utils";
 
 interface TitleProps {
@@ -19,7 +20,7 @@ export const Title = ({
 			centered && "text-center",
 			className
 		)}>
-			<h1 className="text-2xl font-bold text-foreground">{title}</h1>
+			<Heading>{title}</Heading>
 			{subtitle && (
 				<p className="text-muted-foreground mt-2">{subtitle}</p>
 			)}

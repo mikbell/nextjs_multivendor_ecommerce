@@ -1,4 +1,3 @@
-import React from "react";
 import { getStoreDetailsForAdmin } from "@/queries/store";
 import {
 	Card,
@@ -24,6 +23,7 @@ import {
 	ArrowLeft,
 	ExternalLink,
 } from "lucide-react";
+import Heading from "@/components/shared/heading";
 
 type Props = {
 	params: Promise<{
@@ -57,9 +57,8 @@ export default async function StoreDetailPage({ params }: Props) {
 							</Button>
 						</Link>
 						<div>
-							<h1 className="text-3xl font-bold tracking-tight">
-								Dettagli Negozio
-							</h1>
+						<Heading>Dettagli Negozio</Heading>
+
 							<p className="text-muted-foreground">
 								Visualizza e gestisci le informazioni del negozio
 							</p>
@@ -177,9 +176,7 @@ export default async function StoreDetailPage({ params }: Props) {
 								<Store className="h-5 w-5 text-muted-foreground mt-0.5" />
 								<div className="flex-1 space-y-1">
 									<p className="text-sm font-medium">URL Negozio</p>
-									<p className="text-sm text-muted-foreground">
-										{store.url}
-									</p>
+									<p className="text-sm text-muted-foreground">{store.url}</p>
 								</div>
 							</div>
 
@@ -189,9 +186,7 @@ export default async function StoreDetailPage({ params }: Props) {
 								<Mail className="h-5 w-5 text-muted-foreground mt-0.5" />
 								<div className="flex-1 space-y-1">
 									<p className="text-sm font-medium">Email</p>
-									<p className="text-sm text-muted-foreground">
-										{store.email}
-									</p>
+									<p className="text-sm text-muted-foreground">{store.email}</p>
 								</div>
 							</div>
 
@@ -201,9 +196,7 @@ export default async function StoreDetailPage({ params }: Props) {
 								<Phone className="h-5 w-5 text-muted-foreground mt-0.5" />
 								<div className="flex-1 space-y-1">
 									<p className="text-sm font-medium">Telefono</p>
-									<p className="text-sm text-muted-foreground">
-										{store.phone}
-									</p>
+									<p className="text-sm text-muted-foreground">{store.phone}</p>
 								</div>
 							</div>
 
@@ -347,8 +340,7 @@ export default async function StoreDetailPage({ params }: Props) {
 												</span>
 											</div>
 										</div>
-										<Badge
-											variant={product.isActive ? "default" : "secondary"}>
+										<Badge variant={product.isActive ? "default" : "secondary"}>
 											{product.isActive ? "Attivo" : "Inattivo"}
 										</Badge>
 									</div>
@@ -369,7 +361,7 @@ export default async function StoreDetailPage({ params }: Props) {
 						</Button>
 					</Link>
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Errore</h1>
+						<Heading>Ordini</Heading>
 						<p className="text-muted-foreground">
 							Impossibile caricare i dettagli del negozio
 						</p>

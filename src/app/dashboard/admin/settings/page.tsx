@@ -1,4 +1,3 @@
-import React from "react";
 import { currentUser } from "@clerk/nextjs/server";
 import {
 	Card,
@@ -20,6 +19,7 @@ import {
 	Server,
 } from "lucide-react";
 import { db } from "@/lib/db";
+import Heading from "@/components/shared/heading";
 
 export default async function SettingsPage() {
 	try {
@@ -49,7 +49,8 @@ export default async function SettingsPage() {
 			<div className="flex flex-col gap-6 p-6">
 				{/* Header */}
 				<div>
-					<h1 className="text-3xl font-bold tracking-tight">Impostazioni</h1>
+					<Heading>Impostazioni</Heading>
+
 					<p className="text-muted-foreground">
 						Gestisci le impostazioni dell&apos;account e visualizza le
 						informazioni della piattaforma

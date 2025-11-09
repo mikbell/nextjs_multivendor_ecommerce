@@ -2,6 +2,7 @@ import { getAllOrdersForAdmin } from "@/queries/order";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/dashboard/admin/orders/columns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Heading from "@/components/shared/heading";
 
 export default async function OrdersPage() {
 	try {
@@ -20,7 +21,8 @@ export default async function OrdersPage() {
 			<div className="flex flex-col gap-6 p-6">
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Ordini</h1>
+						<Heading>Ordini</Heading>
+
 						<p className="text-muted-foreground">
 							Visualizza e gestisci tutti gli ordini della piattaforma
 						</p>
@@ -80,11 +82,7 @@ export default async function OrdersPage() {
 						<CardTitle>Elenco Ordini</CardTitle>
 					</CardHeader>
 					<CardContent>
-						<DataTable
-							columns={columns}
-							data={orders}
-							searchKey="user.name"
-						/>
+						<DataTable columns={columns} data={orders} searchKey="user.name" />
 					</CardContent>
 				</Card>
 			</div>

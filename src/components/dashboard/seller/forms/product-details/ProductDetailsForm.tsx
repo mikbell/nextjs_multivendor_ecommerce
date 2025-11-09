@@ -25,6 +25,7 @@ import {
 	ProductQuestions,
 	ShippingSettings,
 } from "./components";
+import Heading from "@/components/shared/heading";
 
 const ProductDetailsForm: FC<ProductDetailsProps> = ({
 	data,
@@ -65,13 +66,13 @@ const ProductDetailsForm: FC<ProductDetailsProps> = ({
 								</div>
 							</div>
 							<div>
-								<h1 className="text-4xl font-bold text-foreground mb-2">
+								<Heading>
 									{isNewVariantPage
 										? "Nuova Variante Prodotto"
 										: data?.productId
 										? "Modifica Prodotto"
 										: "Nuovo Prodotto"}
-								</h1>
+								</Heading>
 								<p className="text-lg text-muted-foreground">
 									{isNewVariantPage
 										? `Crea una nuova variante per ${

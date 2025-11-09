@@ -5,6 +5,7 @@ import { AlertTriangle, RefreshCw, ArrowLeft, Bug } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
+import Heading from "@/components/shared/heading";
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -133,9 +134,9 @@ export class CategoryFormErrorBoundary extends Component<ErrorBoundaryProps, Err
                 <div className="absolute inset-0 bg-destructive/10 rounded-full animate-pulse"></div>
                 <AlertTriangle className="w-10 h-10 text-destructive relative z-10" />
               </div>
-              <h1 className="text-3xl font-bold text-foreground mb-2">
+              <Heading>
                 Oops! Qualcosa è andato storto
-              </h1>
+              </Heading>
               <p className="text-muted-foreground text-lg">
                 Si è verificato un errore durante il caricamento del modulo categoria
               </p>

@@ -3,6 +3,7 @@ import { ArrowLeft, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CategoryCard } from "@/components/home/category-card";
 import { getAllCategories } from "@/queries/products-listing";
+import Heading from "@/components/shared/heading";
 
 export default async function CategoriesPage() {
 	const categories = await getAllCategories();
@@ -17,9 +18,7 @@ export default async function CategoriesPage() {
 						Home
 					</Button>
 				</Link>
-				<h1 className="text-4xl font-bold tracking-tight">
-					Tutte le categorie
-				</h1>
+				<Heading>Tutte le categorie</Heading>
 				<p className="text-lg text-muted-foreground">
 					Esplora i nostri prodotti per categoria
 				</p>

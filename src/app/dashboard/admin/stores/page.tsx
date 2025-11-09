@@ -1,8 +1,8 @@
-import React from "react";
 import { getAllStores } from "@/queries/store";
 import { DataTable } from "@/components/ui/data-table";
 import { columns } from "@/components/dashboard/admin/stores/columns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Heading from "@/components/shared/heading";
 
 export default async function StoresPage() {
 	try {
@@ -12,7 +12,8 @@ export default async function StoresPage() {
 			<div className="flex flex-col gap-6 p-6">
 				<div className="flex items-center justify-between">
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Negozi</h1>
+						<Heading>Negozi</Heading>
+
 						<p className="text-muted-foreground">
 							Gestisci tutti i negozi della piattaforma
 						</p>

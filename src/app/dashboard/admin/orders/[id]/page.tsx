@@ -1,4 +1,4 @@
-import React from "react";
+import Heading from "@/components/shared/heading";
 import { getOrderDetailsForAdmin } from "@/queries/order";
 import {
 	Card,
@@ -32,7 +32,10 @@ type Props = {
 const getOrderStatusConfig = (status: string) => {
 	const configs: Record<
 		string,
-		{ label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+		{
+			label: string;
+			variant: "default" | "secondary" | "destructive" | "outline";
+		}
 	> = {
 		Pending: { label: "In Attesa", variant: "secondary" },
 		Confirmed: { label: "Confermato", variant: "default" },
@@ -53,7 +56,10 @@ const getOrderStatusConfig = (status: string) => {
 const getPaymentStatusConfig = (status: string) => {
 	const configs: Record<
 		string,
-		{ label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+		{
+			label: string;
+			variant: "default" | "secondary" | "destructive" | "outline";
+		}
 	> = {
 		Pending: { label: "In Attesa", variant: "secondary" },
 		Paid: { label: "Pagato", variant: "default" },
@@ -87,9 +93,8 @@ export default async function OrderDetailPage({ params }: Props) {
 							</Button>
 						</Link>
 						<div>
-							<h1 className="text-3xl font-bold tracking-tight">
-								Dettagli Ordine
-							</h1>
+							<Heading>Dettagli Ordine</Heading>
+
 							<p className="text-muted-foreground font-mono text-sm">
 								#{order.id}
 							</p>
@@ -151,7 +156,7 @@ export default async function OrderDetailPage({ params }: Props) {
 					<Card>
 						<CardHeader>
 							<CardTitle>Informazioni Cliente</CardTitle>
-							<CardDescription>Dettagli dell'acquirente</CardDescription>
+							<CardDescription>Dettagli dell&apos;acquirente</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="flex items-start gap-4">
@@ -196,7 +201,7 @@ export default async function OrderDetailPage({ params }: Props) {
 					<Card>
 						<CardHeader>
 							<CardTitle>Indirizzo di Spedizione</CardTitle>
-							<CardDescription>Destinazione dell'ordine</CardDescription>
+							<CardDescription>Destinazione dell&apos;ordine</CardDescription>
 						</CardHeader>
 						<CardContent>
 							<div className="flex items-start gap-3">
@@ -235,7 +240,9 @@ export default async function OrderDetailPage({ params }: Props) {
 				<Card>
 					<CardHeader>
 						<CardTitle>Informazioni Ordine</CardTitle>
-						<CardDescription>Dettagli generali dell'ordine</CardDescription>
+						<CardDescription>
+							Dettagli generali dell&apos;ordine
+						</CardDescription>
 					</CardHeader>
 					<CardContent>
 						<div className="grid gap-4 md:grid-cols-2">
@@ -436,7 +443,9 @@ export default async function OrderDetailPage({ params }: Props) {
 						<div className="space-y-3">
 							<div className="flex justify-between">
 								<span className="text-muted-foreground">Subtotale</span>
-								<span className="font-medium">€{order.subTotal.toFixed(2)}</span>
+								<span className="font-medium">
+									€{order.subTotal.toFixed(2)}
+								</span>
 							</div>
 							<div className="flex justify-between">
 								<span className="text-muted-foreground">
@@ -466,9 +475,9 @@ export default async function OrderDetailPage({ params }: Props) {
 						</Button>
 					</Link>
 					<div>
-						<h1 className="text-3xl font-bold tracking-tight">Errore</h1>
+						<Heading>Errore</Heading>
 						<p className="text-muted-foreground">
-							Impossibile caricare i dettagli dell'ordine
+							Impossibile caricare i dettagli dell&apos;ordine
 						</p>
 					</div>
 				</div>

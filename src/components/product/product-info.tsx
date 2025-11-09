@@ -13,6 +13,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import Heading from "../shared/heading";
+import Image from "next/image";
 
 interface Size {
 	id: string;
@@ -50,9 +52,7 @@ export function ProductInfo({
 	store,
 	isSale,
 }: ProductInfoProps) {
-	const [selectedSize, setSelectedSize] = useState<string>(
-		sizes[0]?.id || ""
-	);
+	const [selectedSize, setSelectedSize] = useState<string>(sizes[0]?.id || "");
 
 	const currentSize = sizes.find((s) => s.id === selectedSize) || sizes[0];
 	const price = currentSize?.price || 0;
@@ -69,7 +69,7 @@ export function ProductInfo({
 					className="text-sm text-muted-foreground hover:text-primary">
 					{brand}
 				</Link>
-				<h1 className="text-3xl font-bold tracking-tight">{name}</h1>
+				<Heading>{name}</Heading>
 			</div>
 
 			{/* Rating */}
@@ -128,7 +128,7 @@ export function ProductInfo({
 					<p className="text-sm text-muted-foreground">
 						{inStock ? (
 							<span className="text-green-600">
-								{currentSize.quantity} disponibili
+								{currentSize?.quantity} disponibili
 							</span>
 						) : (
 							<span className="text-destructive">Non disponibile</span>
@@ -159,7 +159,9 @@ export function ProductInfo({
 						className="flex items-center gap-3 hover:opacity-80 transition-opacity">
 						<div className="h-12 w-12 relative rounded-full overflow-hidden bg-muted">
 							{store.logo && (
-								<img
+								<Image
+									width={48}
+									height={48}
 									src={store.logo}
 									alt={store.name}
 									className="object-cover"

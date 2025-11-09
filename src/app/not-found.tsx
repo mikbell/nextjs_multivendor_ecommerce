@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Home, Search, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import Heading from "@/components/shared/heading";
 
 export default function NotFound() {
 	return (
@@ -8,9 +9,9 @@ export default function NotFound() {
 			<div className="space-y-6">
 				{/* 404 Number */}
 				<div className="relative">
-					<h1 className="text-9xl font-bold text-primary/20 md:text-[12rem]">
+					<Heading className="text-9xl text-primary/20 md:text-[12rem]">
 						404
-					</h1>
+					</Heading>
 					<div className="absolute inset-0 flex items-center justify-center">
 						<Search className="h-16 w-16 text-muted-foreground animate-pulse md:h-20 md:w-20" />
 					</div>

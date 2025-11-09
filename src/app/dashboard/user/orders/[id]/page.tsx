@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Package, Truck, MapPin, CreditCard } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import Heading from "@/components/shared/heading";
 
 export default async function OrderDetailPage({
 	params,
@@ -59,9 +60,8 @@ export default async function OrderDetailPage({
 					</Link>
 					<div className="flex items-center justify-between">
 						<div>
-							<h1 className="text-3xl font-bold mb-2">
-								Ordine #{order.id.slice(0, 8)}
-							</h1>
+							<Heading>{order.id.slice(0, 8)}</Heading>
+
 							<p className="text-muted-foreground">
 								{new Date(order.createdAt).toLocaleDateString("it-IT", {
 									day: "numeric",

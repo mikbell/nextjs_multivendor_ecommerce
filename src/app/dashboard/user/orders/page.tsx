@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Package, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
+import Heading from "@/components/shared/heading";
 
 export default async function UserOrdersPage() {
 	const user = await currentUser();
@@ -43,7 +44,7 @@ export default async function UserOrdersPage() {
 							Torna alla Dashboard
 						</Button>
 					</Link>
-					<h1 className="text-3xl font-bold mb-2">I Miei Ordini</h1>
+						<Heading>I miei ordini</Heading>
 					<p className="text-muted-foreground">
 						Visualizza e gestisci tutti i tuoi ordini
 					</p>

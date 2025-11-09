@@ -1,14 +1,15 @@
 "use client";
 
+import Heading from "@/components/shared/heading";
 import { FC } from "react";
 
 export const SimpleCategoryFormTest: FC = () => {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center space-y-4">
-        <h1 className="text-2xl font-bold text-foreground">
+        <Heading>
           Category Form Test
-        </h1>
+        </Heading>
         <p className="text-muted-foreground">
           If you can see this, the basic component loading is working.
         </p>

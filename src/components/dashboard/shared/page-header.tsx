@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import Heading from "@/components/shared/heading";
 
 interface PageHeaderProps {
 	title: string;
@@ -38,9 +39,9 @@ export const PageHeader = ({
 						</Button>
 					)}
 					<div>
-						<h1 className="text-2xl font-bold tracking-tight text-foreground">
+						<Heading>
 							{title}
-						</h1>
+						</Heading>
 						{subtitle && (
 							<p className="text-muted-foreground mt-1">{subtitle}</p>
 						)}

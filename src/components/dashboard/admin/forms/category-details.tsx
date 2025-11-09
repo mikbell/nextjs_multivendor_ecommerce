@@ -16,6 +16,8 @@ import {
 	CategoryFormErrorBoundary,
 } from "./category-details/index";
 import { CategoryWithUrl } from "./category-details/types";
+import Heading from "@/components/shared/heading";
+import { Button } from "@/components/ui/button";
 
 // Loading fallback component
 const FormLoadingFallback: FC = () => (
@@ -49,7 +51,9 @@ const CategoryFormContent: FC<{ data?: CategoryWithUrl }> = ({ data }) => {
 				<FormProgress formProgress={formProgress} isEditMode={isEditMode} />
 
 				<Form {...form}>
-					<div className="space-y-6 pb-32"> {/* Changed from form to div to avoid Server Action issues */}
+					<div className="space-y-6 pb-32">
+						{" "}
+						{/* Changed from form to div to avoid Server Action issues */}
 						{/* Form Sections - Each wrapped in Suspense for better loading */}
 						<Suspense
 							fallback={
@@ -57,30 +61,30 @@ const CategoryFormContent: FC<{ data?: CategoryWithUrl }> = ({ data }) => {
 							}>
 							<CategoryImage form={form} isLoading={isLoading} />
 						</Suspense>
-
 						<Suspense
 							fallback={
 								<div className="h-64 bg-muted/30 rounded-lg animate-pulse" />
 							}>
 							<CategoryBasicInfo form={form} isLoading={isLoading} />
 						</Suspense>
-
 						<Suspense
 							fallback={
 								<div className="h-56 bg-muted/30 rounded-lg animate-pulse" />
 							}>
 							<CategoryDescription form={form} isLoading={isLoading} />
 						</Suspense>
-
 						<Suspense
 							fallback={
 								<div className="h-48 bg-muted/30 rounded-lg animate-pulse" />
 							}>
 							<CategorySettings form={form} isLoading={isLoading} />
 						</Suspense>
-
 						{/* Form Actions - Always visible */}
-						<FormActions isLoading={isLoading} {...(data && { data })} onSubmit={onSubmit} />
+						<FormActions
+							isLoading={isLoading}
+							{...(data && { data })}
+							onSubmit={onSubmit}
+						/>
 					</div>
 				</Form>
 			</div>
@@ -90,18 +94,15 @@ const CategoryFormContent: FC<{ data?: CategoryWithUrl }> = ({ data }) => {
 		return (
 			<div className="min-h-screen bg-background flex items-center justify-center">
 				<div className="text-center space-y-4">
-					<h1 className="text-xl font-bold text-destructive">
-						Errore di caricamento
-					</h1>
+					<Heading>Errore di caricamento</Heading>
+
 					<p className="text-muted-foreground">
 						Si è verificato un errore durante il caricamento del modulo
 						categoria.
 					</p>
-					<button
-						onClick={() => window.location.reload()}
-						className="px-4 py-2 bg-primary text-primary-foreground rounded-lg">
+					<Button onClick={() => window.location.reload()}>
 						Ricarica pagina
-					</button>
+					</Button>
 				</div>
 			</div>
 		);
@@ -133,7 +134,7 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 
 								{/* Title and description */}
 								<div className="flex-1">
-									<h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-2 leading-tight">
+									<Heading>
 										{data?.id ? (
 											<>
 												Modifica categoria
@@ -146,7 +147,7 @@ const CategoryDetails: FC<CategoryDetailsProps> = ({ data }) => {
 										) : (
 											"Nuova categoria"
 										)}
-									</h1>
+									</Heading>
 									<p className="text-base sm:text-lg text-muted-foreground leading-relaxed">
 										{data?.id
 											? "Aggiorna i dettagli della categoria esistente"

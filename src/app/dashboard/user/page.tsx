@@ -12,6 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Package, Heart, MapPin, ShoppingCart, DollarSign } from "lucide-react";
 import Link from "next/link";
+import Heading from "@/components/shared/heading";
 
 export default async function UserDashboardPage() {
 	const user = await currentUser();
@@ -70,7 +71,7 @@ export default async function UserDashboardPage() {
 		<div className="min-h-screen bg-background p-6">
 			<div className="max-w-7xl mx-auto">
 				<div className="mb-8">
-					<h1 className="text-3xl font-bold mb-2">Dashboard Utente</h1>
+						<Heading>Dashboard Utente</Heading>
 					<p className="text-muted-foreground">
 						Benvenuto, {user.firstName || user.emailAddresses[0]?.emailAddress}!
 					</p>
