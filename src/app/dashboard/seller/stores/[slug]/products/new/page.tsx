@@ -2,7 +2,8 @@ import { getAllCategories } from "@/queries/category";
 import React from "react";
 import ProductDetails from "@/components/dashboard/seller/forms/product-details";
 import { getAllSubCategories } from "@/queries/subCategory";
-import CloudinaryTest from "@/components/test/cloudinary-test";
+import { getAllOfferTags } from "@/queries/offer-tag";
+import { getAllCountries } from "@/queries/country";
 
 export default async function SellerNewProductPage({
 	params,
@@ -10,20 +11,21 @@ export default async function SellerNewProductPage({
 	params: Promise<{ slug: string }>;
 }) {
 	const { slug } = await params;
-	const categories = await getAllCategories();
-	const subcategories = await getAllSubCategories();
+	const [categories, subcategories, offerTags, countries] = await Promise.all([
+		getAllCategories(),
+		getAllSubCategories(),
+		getAllOfferTags(),
+		getAllCountries(),
+	]);
 
 	return (
 		<div className="max-w-6xl mx-auto py-4 space-y-6">
-			{/* Temporary test component */}
-			<CloudinaryTest />
-			
 			<ProductDetails
 				categories={categories}
 				subcategories={subcategories}
 				storeUrl={slug}
-				offerTags={[]}
-				countries={[]}
+				offerTags={offerTags}
+				countries={countries}
 			/>
 		</div>
 	);

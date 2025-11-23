@@ -52,7 +52,7 @@ export const ProductFormSchema = z.object({
 		message:
 			"Nome variante può contenere solo lettere, numeri, spazi e caratteri speciali comuni, senza caratteri consecutivi.",
 	}),
-	variantDescription: z.string().optional(),
+	variantDescription: z.string().default(""),
 	images: z
 		.object({ url: z.string() })
 		.array()
@@ -62,22 +62,16 @@ export const ProductFormSchema = z.object({
 		.object({ url: z.string() })
 		.array()
 	.length(1, "Scegli un'immagine per la variante del prodotto."),
-	categoryId: z.uuid({
-		error: (issue) =>
-			issue === undefined
-				? "ID categoria obbligatorio"
-				: "Immetti un ID valido",
-	}),
-	subCategoryId: z.uuid({
-		error: (issue) =>
-			issue === undefined
-				? "ID sottocategoria obbligatorio"
-				: "Immetti un ID valido",
-	}),
+	categoryId: z.string({
+		required_error: "ID categoria obbligatorio",
+	}).min(1, "Seleziona una categoria"),
+	subCategoryId: z.string({
+		required_error: "ID sottocategoria obbligatorio",
+	}).min(1, "Seleziona una sottocategoria"),
 	offerTagId: z
 		.string()
-		.optional()
-		.refine((val) => !val || val === "" || z.string().uuid().safeParse(val).success, {
+		.default("")
+		.refine((val) => val === "" || z.string().uuid().safeParse(val).success, {
 			message: "Immetti un ID valido o lascia vuoto",
 		}),
 	brand: z
@@ -192,7 +186,7 @@ export const ProductFormSchema = z.object({
 		}
 	),
 	isSale: z.boolean().default(false),
-	saleEndDate: z.string().optional(),
+	saleEndDate: z.string().default(""),
 	freeShippingForAllCountries: z.boolean().default(false),
 	freeShippingCountriesIds: z
 		.object({

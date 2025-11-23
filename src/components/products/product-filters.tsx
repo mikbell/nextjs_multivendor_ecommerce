@@ -49,6 +49,12 @@ export function ProductFilters({
 	priceRange,
 	currentFilters,
 }: ProductFiltersProps) {
+	console.log("🔍 ProductFilters received:", {
+		categoriesLength: categories?.length,
+		priceRange,
+		currentFilters
+	});
+
 	const router = useRouter();
 	const searchParams = useSearchParams();
 
@@ -80,9 +86,19 @@ export function ProductFilters({
 	}, [searchParams, router]);
 
 	const sortBy = currentFilters.sortBy || "popular";
-	const categoryId = currentFilters.categoryId || "all"; // **MODIFICATO QUI**
-	const hasActiveFilters =
-		categoryId || currentFilters.minPrice || currentFilters.maxPrice;
+	const categoryId = currentFilters.categoryId || "all";
+	const hasActiveFilters = Boolean(
+		categoryId !== "all" || currentFilters.minPrice || currentFilters.maxPrice
+	);
+
+	// Verifica che il range sia valido (almeno 10 euro di differenza)
+	const isValidPriceRange = priceRange.max - priceRange.min >= 10;
+
+	// Calcola uno step dinamico in base al range (1% del range, arrotondato a 5)
+	const priceStep = Math.max(
+		5,
+		Math.round(((priceRange.max - priceRange.min) * 0.01) / 5) * 5
+	);
 
 	// Stato locale per lo slider del prezzo
 	const [priceValues, setPriceValues] = useState<[number, number]>([
@@ -149,65 +165,6 @@ export function ProductFilters({
 		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [priceValues, searchParams, priceRange.min, priceRange.max]); // Includi priceRange.min/max
 
-	// --- Componente di Rendering dei Filtri (Riutilizzabile per Mobile/Desktop) ---
-	const FilterContent = ({ isMobile = false }: { isMobile?: boolean }) => (
-		<div className="space-y-6">
-			{/* Categoria */}
-			<div className="space-y-2">
-				<Label htmlFor="category-select">Categoria</Label>
-				<Select
-					value={categoryId}
-					onValueChange={(v) => updateFilters("categoryId", v)}>
-					<SelectTrigger id="category-select">
-						<SelectValue placeholder="Tutte le categorie" />
-					</SelectTrigger>
-					<SelectContent>
-						<SelectItem value="all">Tutte le categorie</SelectItem>{" "}
-						{/* Opzione per deselezionare */}
-						{categories.map((cat) => (
-							<SelectItem key={cat.id} value={cat.id}>
-								{cat.name}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-			</div>
-
-			{/* Fascia di Prezzo */}
-			<div className="space-y-4">
-				<div className="space-y-2">
-					<Label>Fascia di prezzo</Label>
-					<div className="text-sm font-semibold flex justify-between">
-						<span>Min: €{priceValues[0].toFixed(0)}</span>
-						<span>Max: €{priceValues[1].toFixed(0)}</span>
-					</div>
-				</div>
-				<Slider
-					value={priceValues}
-					onValueChange={(values) => setPriceValues(values as [number, number])}
-					min={priceRange.min}
-					max={priceRange.max}
-					step={1}
-				/>
-				<div className="flex justify-between text-xs text-muted-foreground">
-					<span>€{priceRange.min}</span>
-					<span>€{priceRange.max}</span>
-				</div>
-			</div>
-
-			{/* Cancella Filtri (Visualizza solo quando ci sono filtri attivi) */}
-			{isMobile && hasActiveFilters && (
-				<Button
-					variant="outline"
-					onClick={clearFilters}
-					className="w-full mt-4">
-					<X className="mr-2 h-4 w-4" />
-					Cancella filtri
-				</Button>
-			)}
-		</div>
-	);
-
 	// --- Componente Principale ---
 	return (
 		<div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
@@ -224,8 +181,64 @@ export function ProductFilters({
 						<SheetHeader>
 							<SheetTitle>Filtri prodotti</SheetTitle>
 						</SheetHeader>
-						<div className="mt-6">
-							<FilterContent isMobile={true} />
+						<div className="mt-6 space-y-6">
+							{/* Categoria */}
+							<div className="space-y-2">
+								<Label htmlFor="category-select-mobile">Categoria</Label>
+								<Select value={categoryId} onValueChange={(v) => updateFilters("categoryId", v)}>
+									<SelectTrigger id="category-select-mobile">
+										<SelectValue placeholder="Tutte le categorie" />
+									</SelectTrigger>
+									<SelectContent>
+										<SelectItem value="all">Tutte le categorie</SelectItem>
+										{categories.map((cat) => (
+											<SelectItem key={cat.id} value={cat.id}>
+												{cat.name}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
+							</div>
+
+							{/* Fascia di Prezzo */}
+							{isValidPriceRange && (
+								<div className="space-y-4">
+									<Label className="text-sm font-medium">Fascia di prezzo</Label>
+									<div className="flex items-center justify-between gap-2">
+										<div className="flex items-center gap-1.5">
+											<span className="text-xs text-muted-foreground">Min:</span>
+											<span className="text-sm font-semibold">€{priceValues[0].toFixed(0)}</span>
+										</div>
+										<span className="text-xs text-muted-foreground">—</span>
+										<div className="flex items-center gap-1.5">
+											<span className="text-xs text-muted-foreground">Max:</span>
+											<span className="text-sm font-semibold">€{priceValues[1].toFixed(0)}</span>
+										</div>
+									</div>
+									<Slider
+										value={priceValues}
+										onValueChange={(values) => {
+											console.log("🟢 MOBILE Slider changed:", values);
+											setPriceValues(values as [number, number]);
+										}}
+										min={priceRange.min}
+										max={priceRange.max}
+										step={priceStep}
+									/>
+									<div className="flex justify-between text-xs text-muted-foreground">
+										<span>€{priceRange.min}</span>
+										<span>€{priceRange.max}</span>
+									</div>
+								</div>
+							)}
+
+							{/* Cancella Filtri */}
+							{hasActiveFilters && (
+								<Button variant="outline" onClick={clearFilters} className="w-full mt-4">
+									<X className="mr-2 h-4 w-4" />
+									Cancella filtri
+								</Button>
+							)}
 						</div>
 					</SheetContent>
 				</Sheet>
@@ -253,8 +266,57 @@ export function ProductFilters({
 					<CardHeader className="p-4 border-b">
 						<CardTitle className="text-lg items-center">Filtri</CardTitle>
 					</CardHeader>
-					<CardContent className="p-4">
-						<FilterContent />
+					<CardContent className="p-4 space-y-6">
+						{/* Categoria */}
+						<div className="space-y-2">
+							<Label htmlFor="category-select-desktop">Categoria</Label>
+							<Select value={categoryId} onValueChange={(v) => updateFilters("categoryId", v)}>
+								<SelectTrigger id="category-select-desktop">
+									<SelectValue placeholder="Tutte le categorie" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="all">Tutte le categorie</SelectItem>
+									{categories.map((cat) => (
+										<SelectItem key={cat.id} value={cat.id}>
+											{cat.name}
+										</SelectItem>
+									))}
+								</SelectContent>
+							</Select>
+						</div>
+
+						{/* Fascia di Prezzo */}
+						{isValidPriceRange && (
+							<div className="space-y-4">
+								<Label className="text-sm font-medium">Fascia di prezzo</Label>
+								<div className="flex items-center justify-between gap-2">
+									<div className="flex items-center gap-1.5">
+										<span className="text-xs text-muted-foreground">Min:</span>
+										<span className="text-sm font-semibold">€{priceValues[0].toFixed(0)}</span>
+									</div>
+									<span className="text-xs text-muted-foreground">—</span>
+									<div className="flex items-center gap-1.5">
+										<span className="text-xs text-muted-foreground">Max:</span>
+										<span className="text-sm font-semibold">€{priceValues[1].toFixed(0)}</span>
+									</div>
+								</div>
+								<Slider
+									value={priceValues}
+									onValueChange={(values) => {
+										console.log("🟢 DESKTOP Slider changed:", values);
+										setPriceValues(values as [number, number]);
+									}}
+									min={priceRange.min}
+									max={priceRange.max}
+									step={priceStep}
+								/>
+								<div className="flex justify-between text-xs text-muted-foreground">
+									<span>€{priceRange.min}</span>
+									<span>€{priceRange.max}</span>
+								</div>
+							</div>
+						)}
+
 						<div className="flex items-center space-x-2">
 							<Label htmlFor="sort-select" className="shrink-0">
 								Ordina per:

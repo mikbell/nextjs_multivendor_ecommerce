@@ -204,8 +204,24 @@ export type ReviewsOrderType = {
 	orderBy: "latest" | "oldest" | "highest";
 };
 
+export type CartItemWithDetails = CartItem & {
+	product: {
+		id: string;
+		name: string;
+		slug: string;
+	};
+	productVariant: {
+		id: string;
+		slug: string;
+		variantName: string;
+		variantImage: string;
+		images: ProductVariantImage[];
+	};
+	sizeRecord: Size;
+};
+
 export type CartWithCartItemsType = Cart & {
-	cartItems: CartItem[];
+	cartItems: CartItemWithDetails[];
 	coupon: (Coupon & { store: Store }) | null;
 };
 

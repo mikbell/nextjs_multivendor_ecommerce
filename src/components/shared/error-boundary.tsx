@@ -67,8 +67,8 @@ const DefaultErrorFallback: React.FC<ErrorFallbackProps> = ({ error, resetError 
 				</CardHeader>
 				<CardContent className="space-y-4">
 					{process.env.NODE_ENV === "development" && (
-						<div className="rounded-md bg-gray-100 p-3">
-							<p className="text-sm font-mono text-gray-800">{error.message}</p>
+						<div className="rounded-md bg-card p-3">
+							<p className="text-sm font-mono">{error.message}</p>
 						</div>
 					)}
 					<Button onClick={resetError} className="w-full">

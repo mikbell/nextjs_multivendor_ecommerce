@@ -1,7 +1,5 @@
-import { Prisma } from "@prisma/client";
 import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import { db } from "./db";
 import ColorThief from "colorthief";
 import { CartProductType, Country } from "./types";
 import countries from "@/data/countries.json";
@@ -10,34 +8,6 @@ import { differenceInDays, differenceInHours } from "date-fns";
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
-// Helper function to genarae a unique slug (restricted to used models)
-type SlugModels = "product" | "productVariant";
-export const generateUniqueSlug = async (
-    baseSlug: string,
-    model: SlugModels,
-    field: string = "slug",
-    separator: string = "-"
-): Promise<string> => {
-    let slug = baseSlug;
-    let suffix = 1;
-
-    while (true) {
-        const existingRecord =
-            model === "product"
-                ? await db.product.findFirst({
-                      where: { [field]: slug } as Prisma.ProductWhereInput,
-                  })
-                : await db.productVariant.findFirst({
-                      where: { [field]: slug } as Prisma.ProductVariantWhereInput,
-                  });
-        if (!existingRecord) {
-            break;
-        }
-        slug = `${slug}${separator}${suffix}`;
-        suffix += 1;
-    }
-    return slug;
-};
 
 // Helper function to grid grid classnames dependng on length
 export const getGridClassName = (length: number) => {

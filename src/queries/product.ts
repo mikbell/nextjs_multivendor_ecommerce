@@ -16,14 +16,19 @@ import {
 	VariantImageType,
 	VariantSimplified,
 } from "@/lib/types";
-import { freeshipping as FreeShipping, productvariant as ProductVariant, size as Size, store as Store } from "@prisma/client";
+import {
+	freeshipping as FreeShipping,
+	productvariant as ProductVariant,
+	size as Size,
+	store as Store,
+} from "@prisma/client";
 
 // Clerk
 import { currentUser } from "@clerk/nextjs/server";
 
 // Slugify
 import slugify from "slugify";
-import { generateUniqueSlug } from "@/lib/utils";
+import { generateUniqueSlug } from "@/lib/server-utils";
 
 // Cookies
 import { getCookie } from "cookies-next";
@@ -58,27 +63,28 @@ export const upsertProduct = async (
 		if (!product) throw new Error("Please provide product data.");
 
 		// Find the store by URL
-		
+
 		const store = await db.store.findUnique({
 			where: { url: storeUrl, userId: user.id },
 		});
-		
-		
+
 		if (!store) {
 			// Let's also check if the store exists with a different user
 			const storeWithDifferentUser = await db.store.findUnique({
 				where: { url: storeUrl },
 			});
 			console.log("Debug - Store with different user:", storeWithDifferentUser);
-			
+
 			// List all stores for this user
 			const userStores = await db.store.findMany({
 				where: { userId: user.id },
 				select: { id: true, name: true, url: true, slug: true },
 			});
 			console.log("Debug - All user stores:", userStores);
-			
-			throw new Error(`Store not found. StoreUrl: ${storeUrl}, UserId: ${user.id}`);
+
+			throw new Error(
+				`Store not found. StoreUrl: ${storeUrl}, UserId: ${user.id}`
+			);
 		}
 
 		// Check if the product already exists
@@ -112,41 +118,50 @@ const handleProductCreate = async (
 	product: ProductWithVariantType,
 	storeId: string
 ) => {
-		console.log("Debug - handleProductCreate called with product:", {
-			name: product.name,
-			variantName: product.variantName,
-			brand: product.brand,
-			description: product.description
-		});
-		
-		// Validate required fields
-		// For new products, all fields are required. For variants, only variantName is required (others come from parent product)
-		const requiredFieldsForNewProduct = ['name', 'variantName', 'brand', 'description'];
-		const missingFields = [];
-		
-		if (!product.name) missingFields.push('name');
-		if (!product.variantName) missingFields.push('variantName');
-		if (!product.brand) missingFields.push('brand');
-		if (!product.description) missingFields.push('description');
-		if (!product.categoryId) missingFields.push('categoryId');
-		if (!product.subCategoryId) missingFields.push('subCategoryId');
-		
-		if (missingFields.length > 0) {
-			const fieldStatus = requiredFieldsForNewProduct.map(field => 
-				`${field}=${!!product[field as keyof typeof product]}`
-			).join(', ');
-			throw new Error(`Missing required fields: ${fieldStatus}. Missing: ${missingFields.join(', ')}`);
-		}
-		
-		// Generate unique slugs for product and variant
-		const productSlug = await generateUniqueSlug(
-			slugify(product.name, {
-				replacement: "-",
-				lower: true,
-				trim: true,
-			}),
-			"product"
+	console.log("Debug - handleProductCreate called with product:", {
+		name: product.name,
+		variantName: product.variantName,
+		brand: product.brand,
+		description: product.description,
+	});
+
+	// Validate required fields
+	// For new products, all fields are required. For variants, only variantName is required (others come from parent product)
+	const requiredFieldsForNewProduct = [
+		"name",
+		"variantName",
+		"brand",
+		"description",
+	];
+	const missingFields = [];
+
+	if (!product.name) missingFields.push("name");
+	if (!product.variantName) missingFields.push("variantName");
+	if (!product.brand) missingFields.push("brand");
+	if (!product.description) missingFields.push("description");
+	if (!product.categoryId) missingFields.push("categoryId");
+	if (!product.subCategoryId) missingFields.push("subCategoryId");
+
+	if (missingFields.length > 0) {
+		const fieldStatus = requiredFieldsForNewProduct
+			.map((field) => `${field}=${!!product[field as keyof typeof product]}`)
+			.join(", ");
+		throw new Error(
+			`Missing required fields: ${fieldStatus}. Missing: ${missingFields.join(
+				", "
+			)}`
 		);
+	}
+
+	// Generate unique slugs for product and variant
+	const productSlug = await generateUniqueSlug(
+		slugify(product.name, {
+			replacement: "-",
+			lower: true,
+			trim: true,
+		}),
+		"product"
+	);
 
 	const variantSlug = await generateUniqueSlug(
 		slugify(product.variantName, {
@@ -165,24 +180,27 @@ const handleProductCreate = async (
 		storeId: storeId, // Add storeId directly instead of connect
 		categoryId: product.categoryId, // Required field
 		subCategoryId: product.subCategoryId, // Required field
-		...(product.offerTagId && product.offerTagId !== "" && { offerTagId: product.offerTagId }), // Only add if not empty
+		...(product.offerTagId &&
+			product.offerTagId !== "" && { offerTagId: product.offerTagId }), // Only add if not empty
 		brand: product.brand,
-		...(product.product_specs && product.product_specs.length > 0 && {
-			specs: {
-				create: product.product_specs.map((spec) => ({
-					name: spec.name,
-					value: spec.value,
-				})),
-			}
-		}),
-		...(product.questions && product.questions.length > 0 && {
-			questions: {
-				create: product.questions.map((q) => ({
-					question: q.question,
-					answer: q.answer,
-				})),
-			}
-		}),
+		...(product.product_specs &&
+			product.product_specs.length > 0 && {
+				specs: {
+					create: product.product_specs.map((spec) => ({
+						name: spec.name,
+						value: spec.value,
+					})),
+				},
+			}),
+		...(product.questions &&
+			product.questions.length > 0 && {
+				questions: {
+					create: product.questions.map((q) => ({
+						question: q.question,
+						answer: q.answer,
+					})),
+				},
+			}),
 		shippingFeeMethod: product.shippingFeeMethod || "ITEM", // Default to ITEM if not provided
 		variants: {
 			create: [
@@ -194,7 +212,9 @@ const handleProductCreate = async (
 					variantImage: product.variantImage || "",
 					sku: product.sku || `SKU-${Date.now()}`, // Generate default SKU if not provided
 					weight: product.weight || 0.1, // Default weight
-					keywords: Array.isArray(product.keywords) ? product.keywords.join(",") : "",
+					keywords: Array.isArray(product.keywords)
+						? product.keywords.join(",")
+						: "",
 					isSale: product.isSale || false,
 					saleEndDate: product.saleEndDate,
 					images: {
@@ -227,19 +247,19 @@ const handleProductCreate = async (
 			],
 		},
 		freeShippingForAllCountries: product.freeShippingForAllCountries || false,
-		...((!product.freeShippingForAllCountries && 
-			product.freeShippingCountriesIds && 
-			product.freeShippingCountriesIds.length > 0) && {
-			freeShipping: {
-				create: {
-					eligibaleCountries: {
-						create: product.freeShippingCountriesIds.map((country) => ({
-							country: { connect: { id: country.value } },
-						})),
+		...(!product.freeShippingForAllCountries &&
+			product.freeShippingCountriesIds &&
+			product.freeShippingCountriesIds.length > 0 && {
+				freeShipping: {
+					create: {
+						eligibaleCountries: {
+							create: product.freeShippingCountriesIds.map((country) => ({
+								country: { connect: { id: country.value } },
+							})),
+						},
 					},
-				}
-			}
-		}),
+				},
+			}),
 		createdAt: product.createdAt,
 		updatedAt: product.updatedAt,
 	};
@@ -321,14 +341,14 @@ export const getProductVariant = async (
 		// Note: include relationships removed due to schema limitations
 	});
 	if (!product) return;
-	
+
 	// Get the variant separately
 	const variant = await db.productvariant.findUnique({
-		where: { id: variantId }
+		where: { id: variantId },
 	});
-	
+
 	if (!variant) return;
-	
+
 	return {
 		productId: product.id,
 		variantId: variant.id,
@@ -632,16 +652,16 @@ export const getProductPageData = async (
 	// Note: Shipping details calculation disabled - requires store and freeShipping relations
 	// TODO: Implement proper shipping calculation when schema relationships are fixed
 	const productShippingDetails = {
-		shippingFeeMethod: 'ITEM',
-		shippingService: 'Standard Shipping',
+		shippingFeeMethod: "ITEM",
+		shippingService: "Standard Shipping",
 		shippingFee: 0,
 		extraShippingFee: 0,
 		deliveryTimeMin: 7,
 		deliveryTimeMax: 14,
-		returnPolicy: '30-day return policy',
-		countryCode: 'US',
-		countryName: 'United States',
-		city: '',
+		returnPolicy: "30-day return policy",
+		countryCode: "US",
+		countryName: "United States",
+		city: "",
 		isFreeShipping: false,
 	};
 
@@ -729,9 +749,6 @@ const getUserCountry = async () => {
 	}
 };
 
-// Note: formatProductResponse function commented out - requires variant relations
-// TODO: Uncomment and fix when schema relationships are available
-/*
 const formatProductResponse = (
 	product: ProductPageType,
 	shippingDetails: ProductShippingDetailsType,
@@ -787,11 +804,7 @@ const formatProductResponse = (
 		variantInfo: product.variantsInfo,
 	};
 };
-*/
 
-// Note: getStoreFollowersCount commented out - requires follower relations
-// TODO: Fix when schema relationships are available
-/*
 const getStoreFollowersCount = async (storeId: string) => {
 	const storeFollwersCount = await db.store.findUnique({
 		where: {
@@ -807,14 +820,7 @@ const getStoreFollowersCount = async (storeId: string) => {
 	});
 	return storeFollwersCount?._count.followers || 0;
 };
-*/
-const getStoreFollowersCount = async (storeId: string) => {
-	return 0; // Default value
-};
 
-// Note: checkIfUserFollowingStore commented out - requires follower relations
-// TODO: Fix when schema relationships are available
-/*
 const checkIfUserFollowingStore = async (
 	storeId: string,
 	userId: string | undefined
@@ -840,13 +846,6 @@ const checkIfUserFollowingStore = async (
 	}
 
 	return isUserFollowingStore;
-};
-*/
-const checkIfUserFollowingStore = async (
-	storeId: string,
-	userId: string | undefined
-) => {
-	return false; // Default value
 };
 
 export const getRatingStatistics = async (productId: string) => {
@@ -883,14 +882,6 @@ export const getRatingStatistics = async (productId: string) => {
 	};
 };
 
-// Function: getShippingDetails
-// Description: Retrieves and calculates shipping details based on user country and product.
-// Access Level: Public
-// Parameters:
-//   - shippingFeeMethod: The shipping fee method of the product.
-//   - userCountry: The parsed user country object from cookies.
-//   - store :  store details.
-// Returns: Calculated shipping details.
 export const getShippingDetails = async (
 	shippingFeeMethod: string,
 	userCountry: { name: string; code: string; city: string },
@@ -993,16 +984,6 @@ export const getShippingDetails = async (
 	return false;
 };
 
-// Function: getProductFilteredReviews
-// Description: Retrieves filtered and sorted reviews for a product from the database, based on rating, presence of images, and sorting options.
-// Access Level: Public
-// Parameters:
-//   - productId: The ID of the product for which reviews are being fetched.
-//   - filters: An object containing the filter options such as rating and whether reviews include images.
-//   - sort: An object defining the sort order, such as latest, oldest, or highest rating.
-//   - page: The page number for pagination (1-based index).
-//   - pageSize: The number of reviews to retrieve per page.
-// Returns: A paginated list of reviews that match the filter and sort criteria.
 export const getProductFilteredReviews = async (
 	productId: string,
 	filters: { rating?: number; hasImages?: boolean },
@@ -1098,17 +1079,6 @@ export const getDeliveryDetailsForStoreByCountry = async (
 	};
 };
 
-// Function: getProductShippingFee
-// Description: Retrieves and calculates shipping fee based on user country and product.
-// Access Level: Public
-// Parameters:
-//   - shippingFeeMethod: The shipping fee method of the product.
-//   - userCountry: The parsed user country object from cookies.
-//   - store :  store details.
-//   - freeShipping.
-//   - weight.
-//   - quantity.
-// Returns: Calculated total shipping fee for product.
 export const getProductShippingFee = async (
 	shippingFeeMethod: string,
 	userCountry: Country,
@@ -1155,14 +1125,6 @@ export const getProductShippingFee = async (
 
 		// Calculate the additional quantity (excluding the first item)
 		const additionalItemsQty = quantity - 1;
-
-		// Log values for debugging (remove in production)
-		/*
-    console.log("Shipping fee details:");
-    console.log("Per Item Fee:", shippingFeePerItem);
-    console.log("Additional Item Fee:", shippingFeeForAdditionalItem);
-    console.log("Per Kg Fee:", shippingFeePerKg);
-    */
 
 		// Define fee calculation methods in a map (using functions)
 		const feeCalculators: Record<string, () => number> = {

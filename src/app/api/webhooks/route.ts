@@ -1,8 +1,8 @@
 import { Webhook } from "svix";
 import { headers } from "next/headers";
-import { WebhookEvent, clerkClient } from "@clerk/nextjs/server";
-import { User } from "@prisma/client";
+import { WebhookEvent } from "@clerk/nextjs/server";
 import { db } from "@/lib/db";
+import { initializeNewUserRole } from "@/lib/clerk-utils";
 export async function POST(req: Request) {
 	// You can find this in the Clerk Dashboard -> Webhooks -> choose the endpoint
 	const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SIGNING_SECRET;
@@ -48,8 +48,8 @@ export async function POST(req: Request) {
 			status: 400,
 		});
 	}
-	// When user is created or updated
-	if (evt.type === "user.created" || evt.type === "user.updated") {
+	// When user is created
+	if (evt.type === "user.created") {
 		// Parse the incoming event data
 		const data = JSON.parse(body).data;
 
@@ -66,38 +66,71 @@ export async function POST(req: Request) {
 		const userPicture = data.image_url || "";
 
 		try {
-			// Upsert user in the database (update if exists, create if not)
-			const dbUser = await db.user.upsert({
-				where: {
+			// Create user in the database with default role "USER"
+			await db.user.create({
+				data: {
+					id: userId,
+					name: userName,
 					email: userEmail,
+					picture: userPicture,
+					role: "USER", // Default role to "USER" for all new users
+					updatedAt: new Date(),
 				},
-			update: {
-				name: userName,
-				email: userEmail,
-				picture: userPicture,
-				updatedAt: new Date(),
-			},
-			create: {
-				id: userId,
-				name: userName,
-				email: userEmail,
-				picture: userPicture,
-				role: "USER", // Default role to "USER" for new users
-				updatedAt: new Date(),
-			},
 			});
 
-			// Update user's metadata in Clerk with the role information
-			const clerk = await clerkClient();
-			await clerk.users.updateUserMetadata(userId, {
-				privateMetadata: {
-					role: dbUser.role, 
+			// Set user's metadata in Clerk with role "USER"
+			const result = await initializeNewUserRole(userId);
+
+			if (!result.success) {
+				console.error("Failed to set user role in Clerk metadata");
+			}
+
+			console.log(`New user created with role USER: ${userId}`);
+		} catch (error) {
+			console.error("Error creating user:", error);
+			return new Response(
+				JSON.stringify({ error: "Failed to create user" }),
+				{ status: 500, headers: { "Content-Type": "application/json" } }
+			);
+		}
+	}
+
+	// When user is updated
+	if (evt.type === "user.updated") {
+		// Parse the incoming event data
+		const data = JSON.parse(body).data;
+
+		// Validate required data
+		if (!data.id || !data.email_addresses || !data.email_addresses[0]) {
+			console.error("Invalid webhook data: missing required fields");
+			return new Response("Invalid webhook data", { status: 400 });
+		}
+
+		// Extract user data safely
+		const userId = data.id;
+		const userName = `${data.first_name || ""} ${data.last_name || ""}`.trim() || "Unknown User";
+		const userEmail = data.email_addresses[0].email_address;
+		const userPicture = data.image_url || "";
+
+		try {
+			// Update user in the database (preserve existing role)
+			await db.user.update({
+				where: {
+					id: userId,
+				},
+				data: {
+					name: userName,
+					email: userEmail,
+					picture: userPicture,
+					updatedAt: new Date(),
 				},
 			});
+
+			console.log(`User updated: ${userId}`);
 		} catch (error) {
-			console.error("Error upserting user:", error);
+			console.error("Error updating user:", error);
 			return new Response(
-				JSON.stringify({ error: "Failed to process user webhook" }), 
+				JSON.stringify({ error: "Failed to update user" }),
 				{ status: 500, headers: { "Content-Type": "application/json" } }
 			);
 		}

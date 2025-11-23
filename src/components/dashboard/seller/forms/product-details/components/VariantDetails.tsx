@@ -70,11 +70,8 @@ export const VariantDetails = ({
 							name="variantImage"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-medium flex items-center gap-2">
-										Immagine Variante
-										<Badge variant="destructive" className="text-xs">
-											Richiesto
-										</Badge>
+									<FormLabel className="text-sm font-medium">
+										Immagine Variante <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormDescription className="mb-4">
 										Immagine principale che rappresenta questa specifica

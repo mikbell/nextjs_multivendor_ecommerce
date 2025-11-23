@@ -18,12 +18,10 @@ import { upsertProduct } from "@/queries/product";
 import { getAllCategoriesForCategory } from "@/queries/category";
 
 // Types
-import { Category, Country, OfferTag, SubCategory } from "@prisma/client";
+import { Country, SubCategory } from "@prisma/client";
 
 interface UseProductFormProps {
   data?: Partial<ProductWithVariantType>;
-  categories: Category[];
-  offerTags: OfferTag[];
   storeUrl: string;
   countries: Country[];
 }
@@ -122,9 +120,52 @@ export const useProductForm = ({
     defaultValues: getInitialValues(), // Get initial values with data if available
   });
 
-  // Provide simple static values for form progress and quality checks
-  // These were causing infinite loops when calculated dynamically
-  const formProgress = 0; // Simplified to avoid loops
+  // Calculate form progress based on field completion
+  const calculateFormProgress = useCallback(() => {
+    const values = form.getValues();
+    let completed = 0;
+    const total = 13;
+
+    // Basic info (3 points)
+    if (values.name && values.name.trim().length >= 2) completed++;
+    if (values.description && values.description.trim().length >= 20) completed++;
+    if (values.brand && values.brand.trim().length >= 2) completed++;
+
+    // Categories (2 points)
+    if (values.categoryId && values.categoryId.trim()) completed++;
+    if (values.subCategoryId && values.subCategoryId.trim()) completed++;
+
+    // Variant info (2 points)
+    if (values.variantName && values.variantName.trim().length >= 2) completed++;
+    if (values.sku && values.sku.trim().length >= 6) completed++;
+
+    // Images (2 points)
+    if (values.images && values.images.length >= 3) completed++;
+    if (values.variantImage && values.variantImage.length === 1) completed++;
+
+    // Variant details (2 points)
+    if (values.colors && values.colors.length > 0 && values.colors.every(c => c.color.trim())) completed++;
+    if (values.sizes && values.sizes.length > 0 && values.sizes.every(s => s.size && s.price > 0 && s.quantity > 0)) completed++;
+
+    // Keywords (1 point)
+    if (values.keywords && values.keywords.length >= 5) completed++;
+
+    // Weight (1 point)
+    if (values.weight && values.weight >= 0.01) completed++;
+
+    return Math.round((completed / total) * 100);
+  }, [form]);
+
+  const [formProgress, setFormProgress] = useState(0);
+
+  // Update progress on form change
+  useEffect(() => {
+    const subscription = form.watch(() => {
+      setFormProgress(calculateFormProgress());
+    });
+    return () => subscription.unsubscribe();
+  }, [form, calculateFormProgress]);
+
   const qualityChecks = {
     checks: {
       hasGoodTitle: false,
@@ -273,153 +314,8 @@ export const useProductForm = ({
             : 0.1,
       };
 
-      // Basic validation
-      if (isNewVariantPage) {
-        if (!finalValues.variantName) {
-          toast.error("Nome variante è obbligatorio");
-          return;
-        }
-      } else {
-        // For full product creation (not new variant page)
-        console.log("Debug - Validation check values:", {
-          name: finalValues.name,
-          nameType: typeof finalValues.name,
-          nameLength: finalValues.name?.length,
-          variantName: finalValues.variantName,
-          variantNameType: typeof finalValues.variantName,
-          variantNameLength: finalValues.variantName?.length,
-          brand: finalValues.brand,
-          brandType: typeof finalValues.brand,
-          brandLength: finalValues.brand?.length,
-          description: finalValues.description,
-          descriptionType: typeof finalValues.description,
-          descriptionLength: finalValues.description?.length,
-          isNewVariantPage: isNewVariantPage,
-          data: data
-        });
-        
-        // Helper function to check if a string field is truly empty
-        const isEmpty = (value: unknown): boolean => {
-          return value === undefined || value === null || (typeof value === 'string' && value.trim() === '');
-        };
-        
-        // Check if the form is completely untouched (all default empty values)
-        const isFormEmpty = isEmpty(finalValues.name) && 
-                           isEmpty(finalValues.variantName) && 
-                           isEmpty(finalValues.brand) && 
-                           isEmpty(finalValues.description) && 
-                           isEmpty(finalValues.categoryId) && 
-                           isEmpty(finalValues.subCategoryId);
-                           
-        if (isFormEmpty) {
-          toast.error(
-            "Compila almeno i campi principali prima di salvare",
-            {
-              description: "Inizia inserendo il nome del prodotto, la variante e la marca. Usa i menu 💡 per consigli utili.",
-              duration: 6000,
-            }
-          );
-          return;
-        }
-        
-        // Step 1: Campi assolutamente essenziali
-        const essentialFields = [];
-        if (isEmpty(finalValues.name))
-          essentialFields.push("Nome prodotto");
-        if (isEmpty(finalValues.variantName))
-          essentialFields.push("Nome variante");
-        if (isEmpty(finalValues.brand)) 
-          essentialFields.push("Marca");
-        
-        // Step 2: Campi molto importanti  
-        const importantFields = [];
-        if (isEmpty(finalValues.description))
-          importantFields.push("Descrizione");
-        if (isEmpty(finalValues.categoryId))
-          importantFields.push("Categoria");
-        if (isEmpty(finalValues.subCategoryId))
-          importantFields.push("Sottocategoria");
-        
-        // Priority 1: Check essential fields first
-        if (essentialFields.length > 0) {
-          console.log("Debug - Essential fields missing:", essentialFields);
-          toast.error(
-            "Campi essenziali mancanti",
-            {
-              description: `Completa prima: ${essentialFields.join(
-                ", "
-              )}. Questi sono i campi minimi per creare un prodotto.`,
-              duration: 6000,
-            }
-          );
-          return;
-        }
-        
-        // Priority 2: Check important fields  
-        if (importantFields.length > 0) {
-          console.log("Debug - Important fields missing:", importantFields);
-          toast.error(
-            "Campi importanti mancanti",
-            {
-              description: `Aggiungi anche: ${importantFields.join(
-                ", "
-              )}. Usa i consigli 💡 per aiuto.`,
-              duration: 6000,
-            }
-          );
-          return;
-        }
-        
-        // Priority 3: Check additional required fields (only if basic fields are OK)
-        const additionalMissingFields = [];
-        if (!finalValues.images || finalValues.images.length < 3)
-          additionalMissingFields.push("Almeno 3 immagini del prodotto");
-        if (!finalValues.variantImage || finalValues.variantImage.length !== 1)
-          additionalMissingFields.push("Un'immagine per la variante");
-        if (!finalValues.keywords || finalValues.keywords.length < 5)
-          additionalMissingFields.push("Almeno 5 parole chiave");
-        
-        // Check product specs
-        if (!finalValues.product_specs || finalValues.product_specs.length === 0 ||
-            !finalValues.product_specs.every(spec => spec.name.trim() !== "" && spec.value.trim() !== ""))
-          additionalMissingFields.push("Specifiche prodotto complete");
-        
-        // Check variant specs
-        if (!finalValues.variant_specs || finalValues.variant_specs.length === 0 ||
-            !finalValues.variant_specs.every(spec => spec.name.trim() !== "" && spec.value.trim() !== ""))
-          additionalMissingFields.push("Specifiche variante complete");
-        
-        // Check questions
-        if (!finalValues.questions || finalValues.questions.length === 0 ||
-            !finalValues.questions.every(q => q.question.trim() !== "" && q.answer.trim() !== ""))
-          additionalMissingFields.push("Domande e risposte complete");
-        
-        // Check colors
-        if (!finalValues.colors || finalValues.colors.length === 0 ||
-            !finalValues.colors.every(c => c.color.trim() !== ""))
-          additionalMissingFields.push("Almeno un colore");
-        
-        // Check sizes
-        if (!finalValues.sizes || finalValues.sizes.length === 0 ||
-            !finalValues.sizes.every(s => s.size.trim() !== "" && s.price > 0 && s.quantity > 0))
-          additionalMissingFields.push("Almeno una taglia con prezzo e quantità validi");
-        
-        console.log("Debug - Additional missing fields:", additionalMissingFields);
-        
-        if (additionalMissingFields.length > 0) {
-          toast.error(
-            "Completa tutti i dettagli del prodotto",
-            {
-              description: `Mancano ancora: ${additionalMissingFields.join(
-                ", "
-              )}. 🎆 Stai quasi finendo!`,
-              duration: 8000,
-            }
-          );
-          return;
-        }
-
-      }
+      // Log validation passed
+      console.log("Debug - Form validation passed, proceeding with save");
 
       try {
         // Per le nuove varianti, usa i valori del prodotto esistente dove necessario
@@ -436,8 +332,8 @@ export const useProductForm = ({
           categoryId: finalValues.categoryId || data?.categoryId || "",
           subCategoryId: finalValues.subCategoryId || data?.subCategoryId || "",
           offerTagId: finalValues.offerTagId || "",
-          isSale: finalValues.isSale,
-          saleEndDate: finalValues.saleEndDate,
+          isSale: finalValues.isSale ?? false,
+          saleEndDate: finalValues.saleEndDate ?? "",
           brand: finalValues.brand || data?.brand || "",
           sku: finalValues.sku,
           weight: finalValues.weight,
@@ -448,7 +344,7 @@ export const useProductForm = ({
           keywords: finalValues.keywords,
           questions: finalValues.questions,
           shippingFeeMethod: finalValues.shippingFeeMethod,
-          freeShippingForAllCountries: finalValues.freeShippingForAllCountries,
+          freeShippingForAllCountries: finalValues.freeShippingForAllCountries ?? false,
           freeShippingCountriesIds: finalValues.freeShippingCountriesIds || [],
           createdAt: new Date(),
           updatedAt: new Date(),
@@ -485,8 +381,48 @@ export const useProductForm = ({
     },
     (errors) => {
       console.log("Debug - Form validation errors:", errors);
+
+      // Count total errors
+      const errorCount = Object.keys(errors).length;
+
+      // Get first few error messages
+      const errorMessages = Object.entries(errors)
+        .slice(0, 3)
+        .map(([field, error]: [string, any]) => {
+          const fieldLabels: Record<string, string> = {
+            name: "Nome prodotto",
+            description: "Descrizione",
+            variantName: "Nome variante",
+            categoryId: "Categoria",
+            subCategoryId: "Sottocategoria",
+            brand: "Marca",
+            sku: "SKU",
+            images: "Immagini",
+            variantImage: "Immagine variante",
+            colors: "Colori",
+            sizes: "Taglie",
+            keywords: "Parole chiave",
+            weight: "Peso",
+            product_specs: "Specifiche prodotto",
+            variant_specs: "Specifiche variante",
+            questions: "Domande",
+          };
+
+          const fieldLabel = fieldLabels[field] || field;
+          const message = error?.message || "Campo obbligatorio";
+
+          return `• ${fieldLabel}: ${message}`;
+        })
+        .join("\n");
+
+      const additionalErrors = errorCount > 3 ? `\n... e altri ${errorCount - 3} errori` : "";
+
       toast.error(
-        "Si sono verificati errori nella validazione del form. Controlla i campi richiesti."
+        `Errori di validazione (${errorCount})`,
+        {
+          description: errorMessages + additionalErrors,
+          duration: 8000,
+        }
       );
     }
   );

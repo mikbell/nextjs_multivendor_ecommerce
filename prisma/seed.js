@@ -1,10 +1,22 @@
+import { config } from "dotenv";
 import { PrismaClient } from "@prisma/client";
 import { seedBaseData } from "./seed-base-data.js";
 import { seedUsersAndStores } from "./seed-users-stores.js";
 import { seedProductsHierarchy } from "./seed-products.js";
 import { seedCommerceData } from "./seed-commerce.js";
 import { seedOrdersAndReviews } from "./seed-orders-reviews.js";
-const prisma = new PrismaClient();
+
+// Load environment variables explicitly - override system env vars
+config({ path: '.env', override: true });
+
+// Pass DATABASE_URL explicitly to PrismaClient
+const prisma = new PrismaClient({
+	datasources: {
+		db: {
+			url: process.env.DATABASE_URL
+		}
+	}
+});
 
 async function clearDatabase() {
 	console.log("🗑️ Clearing existing data...");
@@ -162,7 +174,9 @@ process.on("SIGTERM", async () => {
 });
 
 // Run seeding if this file is executed directly
-if (import.meta.url === `file://${process.argv[1]}`) {
+// Check if this module is being run directly
+const isMainModule = process.argv[1] && import.meta.url.endsWith(process.argv[1].replace(/\\/g, '/'));
+if (isMainModule) {
 	seedDatabase().catch((error) => {
 		console.error("❌ Unhandled seeding error:", error);
 		process.exit(1);

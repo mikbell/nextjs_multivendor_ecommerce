@@ -1,11 +1,11 @@
-import { Category, Country, OfferTag, SubCategory } from "@prisma/client";
+import { Category, Country, SubCategory } from "@prisma/client";
 import { UseFormReturn } from "react-hook-form";
 import { ProductFormSchema } from "@/lib/schemas";
 import { ProductWithVariantType } from "@/lib/types";
 import * as z from "zod";
 
 // Type for the form data
-export type ProductFormData = z.infer<typeof ProductFormSchema>;
+export type ProductFormData = z.input<typeof ProductFormSchema>;
 
 // Base props that most form components need
 export interface BaseFormProps {
@@ -19,24 +19,20 @@ export interface ProductDetailsProps {
   data?: Partial<ProductWithVariantType>;
   categories: Category[];
   subcategories: SubCategory[];
-  offerTags: OfferTag[];
   storeUrl: string;
   countries: Country[];
 }
 
 // Props for ProductBasicInfo component
 export interface ProductBasicInfoProps extends BaseFormProps {
-  data?: Partial<ProductWithVariantType>;
+  data: Partial<ProductWithVariantType> | undefined;
   categories: Category[];
   subcategories: SubCategory[];
   subCategories: SubCategory[];
 }
 
 // Props for ProductImages component
-export interface ProductImagesProps extends BaseFormProps {
-  images: string[];
-  setImages: (images: string[]) => void;
-}
+export type ProductImagesProps = BaseFormProps;
 
 // Props for VariantDetails component
 export interface VariantDetailsProps extends BaseFormProps {

@@ -21,12 +21,12 @@ const FormSection: FC<FormSectionProps> = ({
       {(title || description) && (
         <div className="space-y-2">
           {title && (
-            <h3 className="text-lg font-medium leading-6 text-gray-900 dark:text-gray-100">
+            <h3 className="text-lg font-medium leading-6">
               {title}
             </h3>
           )}
           {description && (
-            <p className="text-sm text-gray-600 dark:text-gray-400">
+            <p className="text-sm">
               {description}
             </p>
           )}
@@ -38,7 +38,7 @@ const FormSection: FC<FormSectionProps> = ({
       </div>
       
       {showDivider && (
-        <hr className="border-gray-200 dark:border-gray-700" />
+        <hr className="border-border" />
       )}
     </div>
   );

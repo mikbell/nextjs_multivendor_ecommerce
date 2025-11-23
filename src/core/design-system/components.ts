@@ -14,9 +14,9 @@ export const componentConfigs = {
     baseClasses: 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2',
     variants: {
       primary: 'bg-blue-600 text-white hover:bg-blue-700 focus:ring-blue-500',
-      secondary: 'bg-gray-200 text-gray-900 hover:bg-gray-300 focus:ring-gray-500',
-      outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
-      ghost: 'bg-transparent text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
+      secondary: 'bg-gray-200 hover:bg-gray-300 focus:ring-gray-500',
+      outline: 'border border-border bg-white hover:bg-gray-50 focus:ring-blue-500',
+      ghost: 'bg-transparent hover:bg-gray-100 focus:ring-gray-500',
       destructive: 'bg-red-600 text-white hover:bg-red-700 focus:ring-red-500',
     },
     sizes: {
@@ -31,9 +31,9 @@ export const componentConfigs = {
   } as ComponentConfig,
 
   input: {
-    baseClasses: 'block w-full rounded-md border-gray-300 shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500',
+    baseClasses: 'block w-full rounded-md border-border shadow-sm transition-colors focus:border-blue-500 focus:ring-blue-500',
     variants: {
-      default: 'border-gray-300',
+      default: 'border-border',
       error: 'border-red-500 focus:border-red-500 focus:ring-red-500',
       success: 'border-green-500 focus:border-green-500 focus:ring-green-500',
     },
@@ -49,11 +49,11 @@ export const componentConfigs = {
   } as ComponentConfig,
 
   card: {
-    baseClasses: 'bg-white rounded-lg border border-gray-200 shadow-sm',
+    baseClasses: 'bg-white rounded-lg border border-border shadow-sm',
     variants: {
-      default: 'border-gray-200',
-      elevated: 'shadow-md border-gray-200',
-      outline: 'border-2 border-gray-300 shadow-none',
+      default: 'border-border',
+      elevated: 'shadow-md border-border',
+      outline: 'border-2 border-border shadow-none',
     },
     sizes: {
       sm: 'p-4',

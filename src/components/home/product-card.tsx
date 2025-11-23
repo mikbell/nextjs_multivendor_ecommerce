@@ -31,7 +31,9 @@ export function ProductCard({
 						src={image || "/placeholder-product.jpg"}
 						alt={name}
 						fill
+						sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 16vw"
 						className="object-cover transition-transform group-hover:scale-105"
+						loading="lazy"
 					/>
 				</div>
 				<CardContent className="p-4">

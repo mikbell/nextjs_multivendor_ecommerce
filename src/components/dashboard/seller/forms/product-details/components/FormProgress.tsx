@@ -50,7 +50,7 @@ export const FormProgress = ({ formProgress, isNewVariantPage }: FormProgressPro
   }
 
   return (
-    <ClientOnly fallback={<div className="h-48 animate-pulse bg-gray-100 rounded-xl mb-8" />}>
+    <ClientOnly fallback={<div className="h-48 animate-pulse rounded-xl mb-8" />}>
       <Card className="shadow-md mb-8">
         <CardHeader>
           <div className="flex items-center justify-between">

@@ -113,7 +113,7 @@ export const getAllCategories = async (storeUrl?: string) => {
 // Returns: Array of subCategories of category sorted by updatedAt date in descending order.
 export const getAllCategoriesForCategory = async (categoryId: string) => {
 	// Retrieve all subcategories of category from the database
-	const subCategories = await db.subcategory.findMany({
+	const subCategories = await db.subCategory.findMany({
 		where: {
 			categoryId,
 		},

@@ -145,7 +145,7 @@ export const getProgressBadge = (progress: number) => {
   if (progress >= PROGRESS_THRESHOLDS.FAIR) {
     return { variant: 'secondary', text: 'In progresso', class: 'bg-blue-100 text-blue-800' };
   }
-  return { variant: 'outline', text: 'Da completare', class: 'bg-gray-100 text-gray-800' };
+  return { variant: 'outline', text: 'Da completare', class: 'bg-gray-100 text-foreground' };
 };
 
 /**
@@ -216,7 +216,7 @@ export const getCharacterCountDisplay = (
   if (minLength && currentLength < minLength) {
     return {
       text: `${currentLength}/${maxLength} (min: ${minLength})`,
-      color: 'text-red-500'
+      color: 'text-destructive'
     };
   }
   
@@ -229,6 +229,6 @@ export const getCharacterCountDisplay = (
   
   return {
     text: `${currentLength}/${maxLength}`,
-    color: 'text-gray-500'
+    color: 'text-foreground'
   };
 };

@@ -7,3 +7,4 @@ export { VariantDetails } from './VariantDetails';
 export { ProductSpecs } from './ProductSpecs';
 export { ProductQuestions } from './ProductQuestions';
 export { ShippingSettings } from './ShippingSettings';
+export { ValidationErrors } from './ValidationErrors';

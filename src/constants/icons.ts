@@ -1,12 +1,13 @@
 import {
-	Boxes,
+	Logs,
 	LayoutDashboard,
 	Store,
 	Users,
 	Settings,
-	LogOut,
+	Barcode,
 	ChartColumnStacked,
 	TicketPercent,
+	Package,
 } from "lucide-react";
 
 export const icons = [
@@ -24,12 +25,12 @@ export const icons = [
 	{
 		label: "Ordini",
 		value: "orders",
-		path: Boxes,
+		path: Logs,
 	},
 	{
-		label: "Products",
+		label: "Prodotti",
 		value: "products",
-		path: Boxes,
+		path: Barcode,
 	},
 	{
 		label: "Categorie",
@@ -59,8 +60,14 @@ export const icons = [
 	},
 
 	{
-		label: "Logout",
-		value: "logout",
-		path: LogOut,
+		label: "Inventario",
+		value: "inventory",
+		path: Package,
 	},
+
+	{
+		label: "Spedizioni",
+		value: "shipping",
+		path: ChartColumnStacked,
+	}
 ];

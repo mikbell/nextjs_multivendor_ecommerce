@@ -11,6 +11,7 @@ import {
 
 // Clerk
 import { currentUser } from "@clerk/nextjs/server";
+import { setUserRole } from "@/lib/clerk-utils";
 
 // Prisma models
 import { shippingrate as ShippingRate, store as Store } from "@prisma/client";
@@ -552,8 +553,9 @@ export const updateStoreStatus = async (
 		},
 	});
 
-	// Update the user role
+	// Update the user role in database and Clerk
 	if (store.status === "PENDING" && updatedStore.status === "ACTIVE") {
+		// Update in database
 		await db.user.update({
 			where: {
 				id: updatedStore.userId,
@@ -562,6 +564,9 @@ export const updateStoreStatus = async (
 				role: "SELLER",
 			},
 		});
+
+		// Update in Clerk metadata
+		await setUserRole(updatedStore.userId, "SELLER");
 	}
 
 	return updatedStore.status;
@@ -627,6 +632,230 @@ export const getStorePageDetails = async (storeUrl: string) => {
 		throw new Error(`Store with URL "${storeUrl}" not found.`);
 	}
 	return store;
+};
+
+/**
+ * Get public store details by slug
+ */
+export const getPublicStoreBySlug = async (slug: string) => {
+	try {
+		const store = await db.store.findUnique({
+			where: {
+				slug,
+				status: "ACTIVE",
+			},
+			include: {
+				user: {
+					select: {
+						id: true,
+						name: true,
+						picture: true,
+					},
+				},
+				_count: {
+					select: {
+						products: {
+							where: {
+								isActive: true,
+							},
+						},
+						followers: true,
+					},
+				},
+			},
+		});
+
+		if (!store) {
+			return null;
+		}
+
+		return {
+			...store,
+			productCount: store._count.products,
+			followerCount: store._count.followers,
+		};
+	} catch (error) {
+		console.error("Error fetching store by slug:", error);
+		return null;
+	}
+};
+
+/**
+ * Get store products for public view
+ */
+export const getPublicStoreProducts = async (
+	storeId: string,
+	options: {
+		page?: number;
+		limit?: number;
+		categoryId?: string;
+		sortBy?: "newest" | "price_asc" | "price_desc" | "popular" | "rating";
+		search?: string;
+	} = {}
+) => {
+	try {
+		const {
+			page = 1,
+			limit = 12,
+			categoryId,
+			sortBy = "newest",
+			search,
+		} = options;
+
+		const skip = (page - 1) * limit;
+
+		const where: any = {
+			storeId,
+			isActive: true,
+		};
+
+		if (categoryId) {
+			where.categoryId = categoryId;
+		}
+
+		if (search) {
+			where.OR = [
+				{ name: { contains: search, mode: "insensitive" } },
+				{ description: { contains: search, mode: "insensitive" } },
+				{ brand: { contains: search, mode: "insensitive" } },
+			];
+		}
+
+		let orderBy: any = { createdAt: "desc" };
+
+		switch (sortBy) {
+			case "price_asc":
+				orderBy = { createdAt: "desc" };
+				break;
+			case "price_desc":
+				orderBy = { createdAt: "desc" };
+				break;
+			case "popular":
+				orderBy = { sales: "desc" };
+				break;
+			case "rating":
+				orderBy = { rating: "desc" };
+				break;
+		}
+
+		const [products, total] = await Promise.all([
+			db.product.findMany({
+				where,
+				skip,
+				take: limit,
+				orderBy,
+				include: {
+					category: {
+						select: {
+							id: true,
+							name: true,
+							slug: true,
+						},
+					},
+					subCategory: {
+						select: {
+							id: true,
+							name: true,
+							slug: true,
+						},
+					},
+					offerTag: {
+						select: {
+							id: true,
+							name: true,
+							discount: true,
+							validUntil: true,
+						},
+					},
+					variants: {
+						where: {
+							isActive: true,
+							stock: {
+								gt: 0,
+							},
+						},
+						select: {
+							id: true,
+							name: true,
+							slug: true,
+							price: true,
+							stock: true,
+							images: true,
+						},
+						orderBy: {
+							price: "asc",
+						},
+						take: 1,
+					},
+				},
+			}),
+			db.product.count({ where }),
+		]);
+
+		return {
+			products,
+			pagination: {
+				page,
+				limit,
+				total,
+				totalPages: Math.ceil(total / limit),
+				hasMore: skip + products.length < total,
+			},
+		};
+	} catch (error) {
+		console.error("Error fetching store products:", error);
+		return {
+			products: [],
+			pagination: {
+				page: 1,
+				limit: 12,
+				total: 0,
+				totalPages: 0,
+				hasMore: false,
+			},
+		};
+	}
+};
+
+/**
+ * Get categories of products in a specific store
+ */
+export const getPublicStoreCategories = async (storeId: string) => {
+	try {
+		const categories = await db.category.findMany({
+			where: {
+				products: {
+					some: {
+						storeId,
+						isActive: true,
+					},
+				},
+			},
+			include: {
+				_count: {
+					select: {
+						products: {
+							where: {
+								storeId,
+								isActive: true,
+							},
+						},
+					},
+				},
+			},
+			orderBy: {
+				name: "asc",
+			},
+		});
+
+		return categories.map((category) => ({
+			...category,
+			productCount: category._count.products,
+		}));
+	} catch (error) {
+		console.error("Error fetching store categories:", error);
+		return [];
+	}
 };
 
 // Function: getStoreDetailsForAdmin

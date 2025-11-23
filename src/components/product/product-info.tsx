@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Star, ShoppingCart, Heart, Store as StoreIcon } from "lucide-react";
+import { Star, Heart, Store as StoreIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -13,6 +13,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { AddToCartButton } from "@/components/cart/add-to-cart-button";
 import Heading from "../shared/heading";
 import Image from "next/image";
 
@@ -33,6 +34,8 @@ interface Store {
 }
 
 interface ProductInfoProps {
+	productId: string;
+	variantId: string;
 	name: string;
 	brand: string;
 	rating: number;
@@ -44,6 +47,8 @@ interface ProductInfoProps {
 }
 
 export function ProductInfo({
+	productId,
+	variantId,
 	name,
 	brand,
 	rating,
@@ -139,13 +144,15 @@ export function ProductInfo({
 
 			{/* Actions */}
 			<div className="flex gap-3">
-				<Button
+				<AddToCartButton
+					productId={productId}
+					variantId={variantId}
+					sizeId={selectedSize}
+					quantity={1}
+					disabled={!inStock || !selectedSize}
 					size="lg"
 					className="flex-1"
-					disabled={!inStock}
-					leftIcon={<ShoppingCart />}>
-					Aggiungi al carrello
-				</Button>
+				/>
 				<Button size="lg" variant="outline" className="px-4">
 					<Heart className="h-5 w-5" />
 				</Button>

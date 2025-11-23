@@ -65,13 +65,11 @@ export const ProductImages = ({
 					name="images"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel className="text-sm font-medium flex items-center gap-2">
+							<FormLabel className="text-sm font-medium">
 								{isNewVariantPage
 									? "Immagini della Variante"
-									: "Immagini del Prodotto"}
-								<Badge variant="destructive" className="text-xs">
-									Richiesto
-								</Badge>
+									: "Immagini del Prodotto"}{" "}
+								<span className="text-red-500">*</span>
 							</FormLabel>
 							<FormDescription className="mb-4">
 								{isNewVariantPage

@@ -1,3 +1,5 @@
+'use client';
+
 import {
 	SignedIn,
 	SignedOut,
@@ -5,24 +7,31 @@ import {
 	SignUpButton,
 	UserButton,
 } from "@clerk/nextjs";
+import dynamic from "next/dynamic";
 import { Button } from "../ui/button";
-import { ModeToggle } from "./mode-toggle";
 import { Logo } from "../shared/logo";
-import { SearchBar } from "./search-bar";
-import Link from "next/link";
-import { useState } from "react";
-import { Menu, X, ShoppingBag, Store, Info, Phone } from "lucide-react";
+import { LoadingLink } from "../shared/loading-link";
+import { ShoppingBag, Store, Info, Phone, Briefcase, Home } from "lucide-react";
+
+const SearchBar = dynamic(() => import("./search-bar").then(mod => ({ default: mod.SearchBar })), { ssr: false });
+const CartIcon = dynamic(() => import("../cart/cart-icon").then(mod => ({ default: mod.CartIcon })), { ssr: false });
+const ModeToggle = dynamic(() => import("./mode-toggle").then(mod => ({ default: mod.ModeToggle })), { ssr: false });
+const MobileMenu = dynamic(() => import("./mobile-menu").then(mod => ({ default: mod.MobileMenu })), { ssr: false });
 
 const navLinks = [
-	{ href: "/", label: "Home" },
+	{ href: "/", label: "Home", icon: Home },
 	{ href: "/products", label: "Prodotti", icon: ShoppingBag },
 	{ href: "/stores", label: "Negozi", icon: Store },
 	{ href: "/about", label: "Chi Siamo", icon: Info },
 	{ href: "/contact", label: "Contatti", icon: Phone },
 ];
 
-export default function Navbar() {
-	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+interface NavbarProps {
+	userRole?: string;
+}
+
+export default function Navbar({ userRole }: NavbarProps) {
+	const isSeller = userRole === "SELLER" || userRole === "ADMIN";
 
 	return (
 		<header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60">
@@ -39,17 +48,20 @@ export default function Navbar() {
 					{/* Desktop Navigation */}
 					<nav className="hidden md:flex items-center gap-6">
 						{navLinks.map((link) => (
-							<Link
+							<LoadingLink
 								key={link.href}
 								href={link.href}
 								className="text-sm font-medium transition-colors hover:text-primary">
 								{link.label}
-							</Link>
+							</LoadingLink>
 						))}
 					</nav>
 
 					{/* Right Side Actions */}
 					<div className="flex items-center gap-2">
+						<SignedIn>
+							<CartIcon />
+						</SignedIn>
 						<div className="hidden md:flex items-center gap-2">
 							<SignedOut>
 								<SignInButton>
@@ -62,72 +74,26 @@ export default function Navbar() {
 								</SignUpButton>
 							</SignedOut>
 							<SignedIn>
-								<Link href="/dashboard">
+								{!isSeller && (
+									<LoadingLink href="/become-seller">
+										<Button variant="outline" size="sm">
+											<Briefcase className="h-4 w-4 mr-2" />
+											Diventa Seller
+										</Button>
+									</LoadingLink>
+								)}
+								<LoadingLink href="/dashboard">
 									<Button size="sm">Dashboard</Button>
-								</Link>
+								</LoadingLink>
 								<UserButton />
 							</SignedIn>
 						</div>
 						<ModeToggle />
 
 						{/* Mobile Menu Button */}
-						<Button
-							variant="ghost"
-							size="icon"
-							className="md:hidden"
-							onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-							aria-label="Toggle menu">
-							{mobileMenuOpen ? (
-								<X className="h-5 w-5" />
-							) : (
-								<Menu className="h-5 w-5" />
-							)}
-						</Button>
+						<MobileMenu navLinks={navLinks} userRole={userRole} />
 					</div>
 				</div>
-
-				{/* Mobile Menu */}
-				{mobileMenuOpen && (
-					<div className="md:hidden border-t py-4">
-						{/* Mobile Search */}
-						<div className="mb-4">
-							<SearchBar />
-						</div>
-						<nav className="flex flex-col space-y-3">
-							{navLinks.map((link) => {
-								const Icon = link.icon;
-								return (
-									<Link
-										key={link.href}
-										href={link.href}
-										onClick={() => setMobileMenuOpen(false)}
-										className="flex items-center gap-2 text-sm font-medium transition-colors hover:text-primary px-2 py-2 rounded-md hover:bg-accent">
-										{Icon && <Icon className="h-4 w-4" />}
-										{link.label}
-									</Link>
-								);
-							})}
-
-							<div className="flex flex-col gap-2 pt-4 border-t">
-								<SignedOut>
-									<SignInButton>
-										<Button variant="ghost" className="w-full justify-start">
-											Accedi
-										</Button>
-									</SignInButton>
-									<SignUpButton>
-										<Button className="w-full justify-start">Registrati</Button>
-									</SignUpButton>
-								</SignedOut>
-								<SignedIn>
-									<Link href="/dashboard" onClick={() => setMobileMenuOpen(false)}>
-										<Button className="w-full justify-start">Dashboard</Button>
-									</Link>
-								</SignedIn>
-							</div>
-						</nav>
-					</div>
-				)}
 			</div>
 		</header>
 	);

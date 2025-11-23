@@ -65,6 +65,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
 				{/* Info */}
 				<ProductInfo
+					productId={product.id}
+					variantId={product.variant?.id || ""}
 					name={product.name}
 					brand={product.brand}
 					rating={product.rating}

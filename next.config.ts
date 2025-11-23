@@ -1,12 +1,17 @@
 import type { NextConfig } from "next";
 
-const isDev = process.env.NODE_ENV === "development";
 const isProd = process.env.NODE_ENV === "production";
 
 const nextConfig: NextConfig = {
 	// Enable experimental features
 	experimental: {
-		optimizePackageImports: ["@radix-ui/react-icons", "lucide-react"],
+		optimizePackageImports: [
+			"@radix-ui/react-icons",
+			"lucide-react",
+			"@clerk/nextjs",
+			"recharts",
+			"@tremor/react",
+		],
 	},
 
 	// Server external packages (moved from experimental)
@@ -19,12 +24,14 @@ const nextConfig: NextConfig = {
 
 	// Image optimization
 	images: {
-		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+		deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048],
 		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
 		formats: ["image/avif", "image/webp"],
-		minimumCacheTTL: 60 * 60 * 24 * 30, // 30 days
+		minimumCacheTTL: 60 * 60 * 24 * 60, // 60 days
 		dangerouslyAllowSVG: true,
 		contentDispositionType: "attachment",
+		unoptimized: false,
+		loader: "default",
 		contentSecurityPolicy:
 			"default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://widget.cloudinary.com; style-src 'self' 'unsafe-inline'; font-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none';",
 		remotePatterns: [

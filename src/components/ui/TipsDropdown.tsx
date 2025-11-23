@@ -23,8 +23,8 @@ export const TipsDropdown: React.FC<TipsDropdownProps> = ({
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-2 w-full p-3 bg-blue-50 hover:bg-blue-100 rounded-lg border border-blue-200 transition-all duration-200 text-left"
       >
-        <Lightbulb className="h-4 w-4 text-blue-600 flex-shrink-0" />
-        <span className="text-sm font-medium text-blue-800 flex-grow">
+        <Lightbulb className="h-4 w-4 text-blue-600 shrink-0" />
+        <span className="text-sm font-medium text-blue-800 grow">
           {title}
         </span>
         <ChevronDown 
@@ -40,7 +40,7 @@ export const TipsDropdown: React.FC<TipsDropdownProps> = ({
             {tips.map((tip, index) => (
               <li key={index} className="flex items-start gap-2">
                 <span className="text-blue-500 mt-1 text-xs">•</span>
-                <span className="text-sm text-gray-700">{tip}</span>
+                <span className="text-sm">{tip}</span>
               </li>
             ))}
           </ul>

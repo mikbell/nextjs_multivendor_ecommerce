@@ -1,17 +1,9 @@
-"use client";
+import { currentUser } from "@clerk/nextjs/server";
+import ConditionalNavbarClient from "./conditional-navbar-client";
 
-import { usePathname } from "next/navigation";
-import Navbar from "./navbar";
+export default async function ConditionalRootNavbar() {
+  const user = await currentUser();
+  const userRole = user?.publicMetadata?.role as string | undefined;
 
-export default function ConditionalRootNavbar() {
-  const pathname = usePathname();
-
-  if (
-    pathname?.startsWith("/dashboard/admin") ||
-    pathname?.startsWith("/dashboard/seller")
-  ) {
-    return null;
-  }
-
-  return <Navbar />;
+  return <ConditionalNavbarClient userRole={userRole} />;
 }

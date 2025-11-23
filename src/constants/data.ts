@@ -36,11 +36,6 @@ export const adminDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
 		icon: "settings",
 		link: "settings",
 	},
-	{
-		label: "Logout",
-		icon: "logout",
-		link: "logout",
-	},
 ];
 
 export const sellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
@@ -50,9 +45,9 @@ export const sellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
 		link: "",
 	},
 	{
-		label: "Negozi",
-		icon: "stores",
-		link: "stores",
+		label: "Prodotti",
+		icon: "products",
+		link: "products",
 	},
 	{
 		label: "Ordini",
@@ -60,14 +55,9 @@ export const sellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
 		link: "orders",
 	},
 	{
-		label: "Categorie",
-		icon: "categories",
-		link: "categories",
-	},
-	{
-		label: "Sotto-categorie",
-		icon: "categories",
-		link: "subCategories",
+		label: "Inventario",
+		icon: "inventory",
+		link: "inventory",
 	},
 	{
 		label: "Coupon",
@@ -75,13 +65,8 @@ export const sellerDashboardSidebarOptions: DashboardSidebarMenuInterface[] = [
 		link: "coupons",
 	},
 	{
-		label: "Impostazioni",
-		icon: "settings",
-		link: "settings",
-	},
-	{
-		label: "Logout",
-		icon: "logout",
-		link: "logout",
+		label: "Spedizioni",
+		icon: "shipping",
+		link: "shipping",
 	},
 ];

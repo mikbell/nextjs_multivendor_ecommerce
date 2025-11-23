@@ -88,11 +88,8 @@ export const ProductBasicInfo = ({
 							name="name"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-medium flex items-center gap-2">
-										Nome del Prodotto
-										<Badge variant="destructive" className="text-xs">
-											Richiesto
-										</Badge>
+									<FormLabel className="text-sm font-medium">
+										Nome del Prodotto <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormDescription>
 										Scegli un nome accattivante e descrittivo (es.
@@ -117,11 +114,8 @@ export const ProductBasicInfo = ({
 							name="variantName"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-medium flex items-center gap-2">
-										Nome della Variante
-										<Badge variant="destructive" className="text-xs">
-											Richiesto
-										</Badge>
+									<FormLabel className="text-sm font-medium">
+										Nome della Variante <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormDescription>
 										Nome specifico di questa variante (es. &quot;Bianco&quot;,
@@ -146,11 +140,8 @@ export const ProductBasicInfo = ({
 							name="brand"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-medium flex items-center gap-2">
-										Marca del Prodotto
-										<Badge variant="destructive" className="text-xs">
-											Richiesto
-										</Badge>
+									<FormLabel className="text-sm font-medium">
+										Marca del Prodotto <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormDescription>
 										Inserisci il nome del brand/marchio
@@ -176,11 +167,8 @@ export const ProductBasicInfo = ({
 							name="categoryId"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-medium flex items-center gap-2">
-										Categoria
-										<Badge variant="destructive" className="text-xs">
-											Richiesto
-										</Badge>
+									<FormLabel className="text-sm font-medium">
+										Categoria <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormDescription>
 										Seleziona la categoria principale del prodotto
@@ -210,11 +198,8 @@ export const ProductBasicInfo = ({
 							name="subCategoryId"
 							render={({ field }) => (
 								<FormItem>
-									<FormLabel className="text-sm font-medium flex items-center gap-2">
-										Sottocategoria
-										<Badge variant="destructive" className="text-xs">
-											Richiesto
-										</Badge>
+									<FormLabel className="text-sm font-medium">
+										Sottocategoria <span className="text-red-500">*</span>
 									</FormLabel>
 									<FormDescription>Affina la categorizzazione</FormDescription>
 									<FormControl>
@@ -245,11 +230,8 @@ export const ProductBasicInfo = ({
 					name="description"
 					render={({ field }) => (
 						<FormItem>
-							<FormLabel className="text-sm font-medium flex items-center gap-2">
-								Descrizione del Prodotto
-								<Badge variant="destructive" className="text-xs">
-									Richiesto
-								</Badge>
+							<FormLabel className="text-sm font-medium">
+								Descrizione del Prodotto <span className="text-red-500">*</span>
 							</FormLabel>
 							<FormDescription className="mb-2">
 								Descrizione dettagliata delle caratteristiche e benefici del
