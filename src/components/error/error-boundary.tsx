@@ -339,7 +339,7 @@ export function withErrorBoundary<P extends object>(
 
 // Hook for error reporting
 export function useErrorHandler() {
-  return React.useCallback((error: Error, context?: Record<string, any>) => {
+  return React.useCallback((error: Error, context?: Record<string, unknown>) => {
     logger.error('Manual error report:', { error, context });
     
     // In a real app, you might want to send this to a service like Sentry
@@ -378,7 +378,7 @@ export function useGlobalErrorHandler() {
 }
 
 // Type definitions
-interface ComponentType<P = {}> {
+interface ComponentType<P = Record<string, never>> {
   (props: P): ReactNode;
   displayName?: string;
   name?: string;

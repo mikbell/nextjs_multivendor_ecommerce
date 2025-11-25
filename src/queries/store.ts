@@ -704,7 +704,7 @@ export const getPublicStoreProducts = async (
 
 		const skip = (page - 1) * limit;
 
-		const where: any = {
+		const where: Record<string, unknown> = {
 			storeId,
 			isActive: true,
 		};
@@ -721,7 +721,7 @@ export const getPublicStoreProducts = async (
 			];
 		}
 
-		let orderBy: any = { createdAt: "desc" };
+		let orderBy: Record<string, unknown> = { createdAt: "desc" };
 
 		switch (sortBy) {
 			case "price_asc":

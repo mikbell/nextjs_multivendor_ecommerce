@@ -17,6 +17,7 @@ const ClientSelectRoot = React.forwardRef<
     suppressHydrationWarning
   />
 ))
+ClientSelectRoot.displayName = "ClientSelectRoot";
 
 const ClientSelectGroup = SelectPrimitive.Group
 

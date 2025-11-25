@@ -24,7 +24,7 @@ export function ProductCard({
 	variantSlug,
 }: ProductCardProps) {
 	return (
-		<Link href={`/product/${slug}/${variantSlug}`}>
+		<Link href={`/products/${slug}/${variantSlug}`}>
 			<Card className="group overflow-hidden transition-all hover:shadow-lg">
 				<div className="relative aspect-square overflow-hidden">
 					<Image

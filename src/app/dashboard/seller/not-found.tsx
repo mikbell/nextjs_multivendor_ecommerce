@@ -22,7 +22,7 @@ export default function SellerNotFound() {
 						Codice errore: <span className="font-mono font-semibold">404</span>
 					</p>
 					<p className="text-xs text-muted-foreground">
-						Verifica l'URL o contatta il supporto se il problema persiste.
+						Verifica l&apos;URL o contatta il supporto se il problema persiste.
 					</p>
 				</CardContent>
 				<CardFooter className="flex flex-col gap-2">

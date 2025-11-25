@@ -175,7 +175,7 @@ export class CategoryFormErrorBoundary extends Component<ErrorBoundaryProps, Err
                   <li>• Ricarica la pagina</li>
                   <li>• Svuota la cache del browser</li>
                   <li>• Prova a tornare indietro e riaccedere</li>
-                  {errorType === 'Loading Error' && <li>• Controlla se ci sono aggiornamenti dell'applicazione</li>}
+                  {errorType === 'Loading Error' && <li>• Controlla se ci sono aggiornamenti dell&apos;applicazione</li>}
                 </ul>
               </div>
 

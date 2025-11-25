@@ -162,7 +162,7 @@ export function ProductInfo({
 			<Card>
 				<CardContent className="p-4">
 					<Link
-						href={`/store/${store.slug}`}
+						href={`/stores/${store.slug}`}
 						className="flex items-center gap-3 hover:opacity-80 transition-opacity">
 						<div className="h-12 w-12 relative rounded-full overflow-hidden bg-muted">
 							{store.logo && (

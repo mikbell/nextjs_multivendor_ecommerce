@@ -99,7 +99,7 @@ export function QueryProvider({ children }: QueryProviderProps) {
 
 // Hook to access query client
 export function useQueryClientInstance() {
-  const queryClient = React.useContext(QueryClientProvider as any);
+  const queryClient = React.useContext(QueryClientProvider as React.Context<unknown>);
   
   if (!queryClient) {
     throw new Error('useQueryClientInstance must be used within a QueryProvider');

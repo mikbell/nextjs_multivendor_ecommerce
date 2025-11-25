@@ -18,6 +18,7 @@ const Select = React.forwardRef<
     suppressHydrationWarning
   />
 ))
+Select.displayName = "Select";
 
 const SelectGroup = SelectPrimitive.Group
 

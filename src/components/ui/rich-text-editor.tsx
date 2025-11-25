@@ -41,7 +41,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     showXPathInStatusbar: false,
     askBeforePasteHTML: false,
     askBeforePasteFromWord: false,
-    defaultActionOnPaste: 'insert_clear_html' as any, // Bypass strict type checking for this Jodit config
+    defaultActionOnPaste: 'insert_clear_html' as const, // Bypass strict type checking for this Jodit config
     beautyHTML: false,
     
     // Color palettes
@@ -134,10 +134,10 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
     
     // Events
     events: {
-      afterInit: function (editor: any) {
+      afterInit: function (editor: {editor?: {ownerDocument?: Document}; ownerDocument?: Document}) {
         // Apply dark theme styles to the editor
         if (isDark) {
-          const editorDoc = (editor as any).editor?.ownerDocument || (editor as any).ownerDocument;
+          const editorDoc = editor.editor?.ownerDocument || editor.ownerDocument;
           if (editorDoc) {
             const style = editorDoc.createElement('style');
             style.innerHTML = `

@@ -259,7 +259,7 @@ FormActions.displayName = 'FormActions';
 
 // Enhanced Form Component with built-in validation display
 interface EnhancedFormProps<TFieldValues extends FieldValues> extends FormProps {
-  form: any; // UseFormReturn type would be ideal here
+  form: UseFormReturn<TFieldValues>;
   onSubmit: (data: TFieldValues) => void | Promise<void>;
   isLoading?: boolean;
   resetOnSubmit?: boolean;

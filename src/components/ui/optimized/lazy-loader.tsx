@@ -101,7 +101,7 @@ class LazyErrorBoundary extends React.Component<
 }
 
 // Lazy component wrapper
-export function createLazyComponent<T = {}>(
+export function createLazyComponent<T = Record<string, never>>(
   importFunc: () => Promise<{ default: ComponentType<T> }>,
   options: LazyLoadOptions = {}
 ): LazyExoticComponent<ComponentType<T>> {
@@ -150,7 +150,7 @@ export function createLazyComponent<T = {}>(
 }
 
 // Higher-order component for lazy loading
-export function withLazyLoading<P = {}>(
+export function withLazyLoading<P = Record<string, never>>(
   importFunc: () => Promise<{ default: ComponentType<P> }>,
   options: LazyLoadOptions = {}
 ) {

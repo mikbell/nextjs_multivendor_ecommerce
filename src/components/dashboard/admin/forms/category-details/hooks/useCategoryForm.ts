@@ -77,7 +77,7 @@ export const useCategoryForm = ({ data }: UseCategoryFormProps) => {
 	);
 
 	// Form hook for managing form state and validation
-	const form = useForm<CategoryFormData, any, CategoryFormData>({
+	const form = useForm<CategoryFormData>({
 		mode: "onBlur", // Changed from onChange to onBlur to reduce validation calls
 		resolver: zodResolver(CategoryFormSchema),
 		defaultValues,

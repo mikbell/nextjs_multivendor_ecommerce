@@ -41,7 +41,7 @@ export const getUserOrders = async (
 	const skip = (page - 1) * pageSize;
 
 	// Construct the base query
-	const whereClause: any = {
+	const whereClause: {AND: unknown[]} = {
 		AND: [
 			{
 				userId: user.id,
@@ -162,7 +162,7 @@ export const getUserPayments = async (
 	const skip = (page - 1) * pageSize;
 
 	// Construct the base query
-	const whereClause: any = {
+	const whereClause: {AND: unknown[]} = {
 		AND: [
 			{
 				userId: user.id,
@@ -265,7 +265,7 @@ export const getUserReviews = async (
 	const skip = (page - 1) * pageSize;
 
 	// Construct the base query
-	const whereClause: any = {
+	const whereClause: {AND: unknown[]} = {
 		AND: [
 			{
 				userId: user.id,
@@ -415,7 +415,7 @@ export const getUserFollowedStores = async (
 
 	// Note: Function disabled due to follower relation issues
 	// TODO: Fix when schema relationships are available
-	const stores: any[] = [];
+	const stores: unknown[] = [];
 	const totalPages = 0;
 	return {
 		stores,

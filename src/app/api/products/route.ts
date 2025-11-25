@@ -5,10 +5,10 @@ export async function GET(request: NextRequest) {
 	try {
 		const searchParams = request.nextUrl.searchParams;
 
-		const filters = {
+		const filters: Record<string, string | number> = {
 			page: parseInt(searchParams.get("page") || "1"),
 			pageSize: 24,
-		} as any;
+		};
 
 		if (searchParams.get("categoryId")) {
 			filters.categoryId = searchParams.get("categoryId")!;
@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 			filters.search = searchParams.get("search")!;
 		}
 		if (searchParams.get("sortBy")) {
-			filters.sortBy = searchParams.get("sortBy") as any;
+			filters.sortBy = searchParams.get("sortBy")!;
 		}
 
 		const { products, pagination } = await getProductsListing(filters);

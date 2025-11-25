@@ -388,7 +388,7 @@ export const useProductForm = ({
       // Get first few error messages
       const errorMessages = Object.entries(errors)
         .slice(0, 3)
-        .map(([field, error]: [string, any]) => {
+        .map(([field, error]: [string, {message?: string}]) => {
           const fieldLabels: Record<string, string> = {
             name: "Nome prodotto",
             description: "Descrizione",

@@ -3,6 +3,8 @@ import { Home, Search, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Heading from "@/components/shared/heading";
 
+export const dynamic = 'force-dynamic';
+
 export default function NotFound() {
 	return (
 		<div className="flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">

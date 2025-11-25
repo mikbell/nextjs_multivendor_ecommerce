@@ -56,7 +56,7 @@ export const columns: ColumnDef<InventoryItem>[] = [
 			return (
 				<div className="flex flex-col">
 					<Link
-						href={`/product/${item.productSlug}/${item.variantSlug}`}
+						href={`/products/${item.productSlug}/${item.variantSlug}`}
 						className="font-medium hover:underline"
 					>
 						{item.productName}

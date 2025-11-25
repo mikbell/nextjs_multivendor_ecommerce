@@ -24,26 +24,28 @@ const barlowFont = Barlow({
 	preload: true,
 });
 
+export const dynamic = 'force-dynamic';
+
 export const metadata: Metadata = {
-	title: "GoShop - La piattaforma di e-commerce italiana",
+	title: "Adesso - La piattaforma di e-commerce italiana",
 	description:
-		"Benvenuto su GoShop, la piattaforma di e-commerce che ti permette di comprare online con facilità e comodità.",
+		"Benvenuto su Adesso, la piattaforma di e-commerce che ti permette di comprare online con facilità e comodità.",
 	metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
 	keywords: ["e-commerce", "shop online", "negozio online", "marketplace", "vendita online"],
-	authors: [{ name: "GoShop" }],
+	authors: [{ name: "Adesso" }],
 	openGraph: {
 		type: "website",
 		locale: "it_IT",
-		siteName: "GoShop",
-		title: "GoShop - La piattaforma di e-commerce italiana",
+		siteName: "Adesso",
+		title: "Adesso - La piattaforma di e-commerce italiana",
 		description:
-			"Benvenuto su GoShop, la piattaforma di e-commerce che ti permette di comprare online con facilità e comodità.",
+			"Benvenuto su Adesso, la piattaforma di e-commerce che ti permette di comprare online con facilità e comodità.",
 	},
 	twitter: {
 		card: "summary_large_image",
-		title: "GoShop - La piattaforma di e-commerce italiana",
+		title: "Adesso - La piattaforma di e-commerce italiana",
 		description:
-			"Benvenuto su GoShop, la piattaforma di e-commerce che ti permette di comprare online con facilità e comodità.",
+			"Benvenuto su Adesso, la piattaforma di e-commerce che ti permette di comprare online con facilità e comodità.",
 	},
 	robots: {
 		index: true,

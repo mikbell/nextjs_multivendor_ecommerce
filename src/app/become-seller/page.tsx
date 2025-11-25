@@ -44,7 +44,7 @@ export default function BecomeSellerPage() {
   const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  const [existingRequest, setExistingRequest] = useState<any>(null);
+  const [existingRequest, setExistingRequest] = useState<{status: string} | null>(null);
 
   const form = useForm<SellerRequestFormData>({
     resolver: zodResolver(sellerRequestSchema),
@@ -88,7 +88,7 @@ export default function BecomeSellerPage() {
         if (response.ok) {
           const requests = await response.json();
           const pending = requests.find(
-            (req: any) => req.status === 'PENDING' || req.status === 'VERIFIED'
+            (req: {status: string}) => req.status === 'PENDING' || req.status === 'VERIFIED'
           );
           setExistingRequest(pending);
         }

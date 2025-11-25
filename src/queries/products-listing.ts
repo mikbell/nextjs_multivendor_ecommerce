@@ -26,7 +26,7 @@ export const getProductsListing = async (filters: ProductFilters = {}) => {
 	} = filters;
 
 	// Build where clause
-	const whereClause: any = {
+	const whereClause: Record<string, unknown> = {
 		isActive: true,
 	};
 
@@ -47,7 +47,7 @@ export const getProductsListing = async (filters: ProductFilters = {}) => {
 	}
 
 	// Build orderBy clause
-	let orderBy: any = {};
+	let orderBy: Record<string, unknown> = {};
 	switch (sortBy) {
 		case "price_asc":
 			orderBy = { variants: { _count: "desc" } }; // Placeholder, price sorting needs variant query

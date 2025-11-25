@@ -14,6 +14,8 @@ import { Package, Heart, MapPin, ShoppingCart, DollarSign } from "lucide-react";
 import Link from "next/link";
 import Heading from "@/components/shared/heading";
 
+export const dynamic = 'force-dynamic';
+
 export default async function UserDashboardPage() {
 	const user = await currentUser();
 	if (!user) {

@@ -102,7 +102,7 @@ export const getHomeDataDynamic = async (
 
 				// Extract variant images for the product
 				const variantImages: VariantImageType[] = variants.map((variant) => ({
-					url: `/product/${product.slug}/${variant.variantSlug}`,
+					url: `/products/${product.slug}/${variant.variantSlug}`,
 					image: variant.variantImage
 						? variant.variantImage
 						: variant.images[0]?.url || '',
@@ -129,7 +129,7 @@ export const getHomeDataDynamic = async (
 			const dbField = mapProperty(property);
 
 			// Construct the 'where' clause based on the dbField
-			let whereClause: any = {};
+			let whereClause: Record<string, unknown> = {};
 			if (dbField === "offerTag.slug") {
 				whereClause = { offerTag: { slug: value } };
 			} else if (dbField === "category.slug") {
@@ -162,7 +162,7 @@ export const getHomeDataDynamic = async (
 		})
 	);
 
-	return results.reduce((acc, result) => ({ ...acc, ...result }), {}) as any;
+	return results.reduce((acc, result) => ({ ...acc, ...result }), {} as Record<string, unknown>);
 };
 
 export const getHomeFeaturedCategories = unstable_cache(

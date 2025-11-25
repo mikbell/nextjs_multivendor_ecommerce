@@ -15,7 +15,7 @@ export const ValidationErrors = ({ form }: ValidationErrorsProps) => {
 
 	if (errorCount === 0) return null;
 
-	const getErrorMessage = (error: any): string => {
+	const getErrorMessage = (error: unknown): string => {
 		if (typeof error === "string") return error;
 		if (error?.message) return error.message;
 		if (Array.isArray(error)) {

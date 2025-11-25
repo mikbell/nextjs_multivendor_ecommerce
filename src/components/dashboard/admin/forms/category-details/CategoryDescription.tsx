@@ -67,7 +67,7 @@ const CategoryDescription: FC<CategoryDescriptionProps> = ({ form, isLoading }) 
                 )}
               </FormLabel>
               <FormDescription className="text-sm text-muted-foreground">
-                Spiega ai clienti che tipo di prodotti troveranno in questa categoria. Una buona descrizione aiuta nella SEO e migliora l'esperienza utente.
+                Spiega ai clienti che tipo di prodotti troveranno in questa categoria. Una buona descrizione aiuta nella SEO e migliora l&apos;esperienza utente.
               </FormDescription>
               <FormControl>
                 <div className="relative">

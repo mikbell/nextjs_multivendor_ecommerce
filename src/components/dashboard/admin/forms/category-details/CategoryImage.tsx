@@ -43,7 +43,7 @@ const CategoryImage: FC<CategoryImageProps> = ({ form, isLoading = false }) => {
               </Badge>
             </FormLabel>
             <FormDescription className="text-sm text-muted-foreground">
-              Carica un'immagine rappresentativa della categoria. Formati supportati: JPG, PNG, WEBP.
+              Carica un&apos;immagine rappresentativa della categoria. Formati supportati: JPG, PNG, WEBP.
               Dimensioni consigliate: 400x300px.
             </FormDescription>
             <FormControl>
@@ -85,7 +85,7 @@ const CategoryImage: FC<CategoryImageProps> = ({ form, isLoading = false }) => {
             {!hasImage && (
               <div className="mt-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
                 <p className="text-sm text-blue-800">
-                  <strong>Suggerimento:</strong> Un'immagine accattivante aiuta i clienti a identificare rapidamente la categoria e migliora l'aspetto del tuo store.
+                  <strong>Suggerimento:</strong> Un&apos;immagine accattivante aiuta i clienti a identificare rapidamente la categoria e migliora l&apos;aspetto del tuo store.
                 </p>
               </div>
             )}

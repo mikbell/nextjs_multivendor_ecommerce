@@ -8,7 +8,7 @@ const UPLOAD_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
 export default function CloudinaryTest() {
   const [status, setStatus] = useState('');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
 
   const testCloudinaryConfig = async () => {
     setStatus('Testing Cloudinary configuration...');

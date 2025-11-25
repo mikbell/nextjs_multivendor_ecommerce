@@ -15,10 +15,11 @@ export async function POST(request: NextRequest) {
 		const { sessionId, url } = await createStripeCheckoutSession(cartId);
 
 		return NextResponse.json({ sessionId, url }, { status: 200 });
-	} catch (error: any) {
+	} catch (error: unknown) {
 		console.error("Checkout API error:", error);
+		const errorMessage = error instanceof Error ? error.message : "Failed to create checkout session";
 		return NextResponse.json(
-			{ error: error.message || "Failed to create checkout session" },
+			{ error: errorMessage },
 			{ status: 500 }
 		);
 	}

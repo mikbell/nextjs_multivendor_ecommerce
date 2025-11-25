@@ -157,10 +157,18 @@ export function ProductsClientWrapper({
 					categories={categories}
 					priceRange={priceRange}
 					currentFilters={{
-						...(initialFilters.categoryId !== undefined && { categoryId: initialFilters.categoryId }),
-						...(initialFilters.minPrice !== undefined && { minPrice: initialFilters.minPrice }),
-						...(initialFilters.maxPrice !== undefined && { maxPrice: initialFilters.maxPrice }),
-						...(initialFilters.sortBy !== undefined && { sortBy: initialFilters.sortBy }),
+						...(initialFilters.categoryId !== undefined && {
+							categoryId: initialFilters.categoryId,
+						}),
+						...(initialFilters.minPrice !== undefined && {
+							minPrice: initialFilters.minPrice,
+						}),
+						...(initialFilters.maxPrice !== undefined && {
+							maxPrice: initialFilters.maxPrice,
+						}),
+						...(initialFilters.sortBy !== undefined && {
+							sortBy: initialFilters.sortBy,
+						}),
 					}}
 				/>
 
@@ -209,7 +217,7 @@ export function ProductsClientWrapper({
 						</div>
 					) : (
 						<div className="text-center py-16 space-y-4">
-							<div className="text-6xl">🔍</div>
+							<Search className="h-12 w-12 mx-auto text-muted-foreground" />
 							<h3 className="text-2xl font-semibold">
 								Nessun prodotto trovato
 							</h3>

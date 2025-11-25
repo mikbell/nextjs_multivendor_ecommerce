@@ -44,9 +44,10 @@ export default function CheckoutPage() {
 			} else {
 				throw new Error("URL di checkout non disponibile");
 			}
-		} catch (error: any) {
+		} catch (error: unknown) {
 			console.error("Checkout error:", error);
-			toast.error(error.message || "Errore durante il checkout");
+			const errorMessage = error instanceof Error ? error.message : "Errore durante il checkout";
+			toast.error(errorMessage);
 			setIsProcessing(false);
 		}
 	};
@@ -143,7 +144,7 @@ export default function CheckoutPage() {
 						</CardHeader>
 						<CardContent>
 							<p className="text-muted-foreground">
-								L'indirizzo di spedizione predefinito verrà utilizzato per questo ordine.
+								L&apos;indirizzo di spedizione predefinito verrà utilizzato per questo ordine.
 								Puoi gestire i tuoi indirizzi nella sezione profilo.
 							</p>
 							<Link href="/dashboard/profile">
@@ -190,8 +191,8 @@ export default function CheckoutPage() {
 
 							<div className="pt-4 space-y-2">
 								<p className="text-xs text-muted-foreground">
-									Cliccando su "Procedi al pagamento" verrai reindirizzato a Stripe
-									per completare l'acquisto in modo sicuro.
+									Cliccando su &quot;Procedi al pagamento&quot; verrai reindirizzato a Stripe
+									per completare l&apos;acquisto in modo sicuro.
 								</p>
 							</div>
 						</CardContent>

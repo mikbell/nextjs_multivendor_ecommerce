@@ -458,7 +458,7 @@ export const deleteProduct = async (productId: string) => {
 //   - pageSize: The number of products per page (default = 10).
 // Returns: An object containing paginated products, filtered variants, and pagination metadata (totalPages, currentPage, pageSize, totalCount).
 export const getProducts = async (
-	filters: any = {},
+	filters: Record<string, unknown> = {},
 	sortBy = "",
 	page: number = 1,
 	pageSize: number = 10
@@ -469,7 +469,7 @@ export const getProducts = async (
 	const skip = (currentPage - 1) * limit;
 
 	// Construct the base query
-	const wherClause: any = {
+	const wherClause: {AND: unknown[]} = {
 		AND: [],
 	};
 
@@ -720,7 +720,7 @@ export const retrieveProductDetails = async (
 			variantName: variant.variantName,
 			variantSlug: variant.slug,
 			variantImage: variant.variantImage,
-			variantUrl: `/product/${productSlug}/${variant.slug}`,
+			variantUrl: `/products/${productSlug}/${variant.slug}`,
 			// Note: images, sizes, colors would need separate queries
 			images: [],
 			sizes: [],
@@ -864,7 +864,7 @@ export const getRatingStatistics = async (productId: string) => {
 	const ratingCounts = Array(5).fill(0);
 
 	ratingStats.forEach((stat) => {
-		let rating = Math.floor(stat.rating);
+		const rating = Math.floor(stat.rating);
 		if (rating >= 1 && rating <= 5) {
 			ratingCounts[rating - 1] = stat._count.rating;
 		}
@@ -991,7 +991,7 @@ export const getProductFilteredReviews = async (
 	page: number = 1,
 	pageSize: number = 4
 ) => {
-	const reviewFilter: any = {
+	const reviewFilter: Record<string, unknown> = {
 		productId,
 	};
 
@@ -1160,7 +1160,7 @@ export const getProductsByIds = async (
 	ids: string[],
 	page: number = 1,
 	pageSize: number = 10
-): Promise<{ products: any; totalPages: number }> => {
+): Promise<{ products: unknown; totalPages: number }> => {
 	// Check if ids array is empty
 	if (!ids || ids.length === 0) {
 		throw new Error("Ids are undefined");

@@ -86,7 +86,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
 						{product.allVariants.map((variant: { id: string; slug: string; variantName: string; variantImage: string }) => (
 							<Link
 								key={variant.id}
-								href={`/product/${productSlug}/${variant.slug}`}>
+								href={`/products/${productSlug}/${variant.slug}`}>
 								<Card
 									className={
 										variant.slug === variantSlug

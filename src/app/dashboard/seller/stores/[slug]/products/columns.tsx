@@ -186,7 +186,7 @@ export const columns: ColumnDef<Product>[] = [
 					<DropdownMenuContent align="end">
 						<DropdownMenuLabel>Azioni</DropdownMenuLabel>
 						<DropdownMenuItem asChild>
-							<Link href={`/product/${product.slug}`}>
+							<Link href={`/products/${product.slug}`}>
 								<Eye className="mr-2 h-4 w-4" />
 								Visualizza
 							</Link>

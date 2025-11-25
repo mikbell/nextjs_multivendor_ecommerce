@@ -4,14 +4,14 @@ interface LogEntry {
   level: LogLevel;
   message: string;
   timestamp: string;
-  data?: any;
+  data?: unknown;
   stack?: string;
 }
 
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
 
-  private formatMessage(level: LogLevel, message: string, data?: any): LogEntry {
+  private formatMessage(level: LogLevel, message: string, data?: unknown): LogEntry {
     const entry: LogEntry = {
       level,
       message,
@@ -53,19 +53,19 @@ class Logger {
     return colors[level] || colors.reset;
   }
 
-  debug(message: string, data?: any) {
+  debug(message: string, data?: unknown) {
     this.output(this.formatMessage('debug', message, data));
   }
 
-  info(message: string, data?: any) {
+  info(message: string, data?: unknown) {
     this.output(this.formatMessage('info', message, data));
   }
 
-  warn(message: string, data?: any) {
+  warn(message: string, data?: unknown) {
     this.output(this.formatMessage('warn', message, data));
   }
 
-  error(message: string, error?: any) {
+  error(message: string, error?: unknown) {
     this.output(this.formatMessage('error', message, error));
   }
 }
